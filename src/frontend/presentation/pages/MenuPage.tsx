@@ -4,6 +4,9 @@ import { startTableSession } from '@infrastructure/api/tableApi'
 import { getAllCategories, getProductsByCategory, Category, Product } from '@infrastructure/api/productsApi'
 import CategoryTabs from '../components/CategoryTabs'
 import ProductCard from '../components/ProductCard'
+import { CartIcon } from '../../src/presentation/components/CartIcon'
+import { ShoppingCart } from '../../src/presentation/components/ShoppingCart'
+import { useCartStore } from '../../src/store/cartStore'
 
 interface SessionData {
   sessionId: string
@@ -20,6 +23,9 @@ function MenuPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadingProducts, setLoadingProducts] = useState(false)
+  const [isCartOpen, setIsCartOpen] = useState(false)
+
+  const setTableNumber = useCartStore(state => state.setTableNumber)
 
   useEffect(() => {
     const init = async () => {
@@ -31,6 +37,9 @@ function MenuPage() {
         // Start session
         const sessionData = await startTableSession(parseInt(tableNumber))
         setSession(sessionData)
+
+        // Set table number in cart store
+        setTableNumber(parseInt(tableNumber))
 
         // Load categories
         const categoriesData = await getAllCategories()
@@ -99,41 +108,58 @@ function MenuPage() {
     )
   }
 
+  const handleCheckout = () => {
+    // TODO: Implement checkout logic to confirm order
+    alert('Checkout functionality will be implemented in next phase')
+  }
+
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <header style={{ marginBottom: '24px' }}>
-        <h1>Table {tableNumber}</h1>
-        {session && (
-          <p style={{ marginTop: '8px', opacity: 0.7, fontSize: '0.9em' }}>
-            Session: {new Date(session.startedAt).toLocaleTimeString()}
-          </p>
-        )}
-      </header>
+    <>
+      <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+        <header style={{ marginBottom: '24px' }}>
+          <h1>Table {tableNumber}</h1>
+          {session && (
+            <p style={{ marginTop: '8px', opacity: 0.7, fontSize: '0.9em' }}>
+              Session: {new Date(session.startedAt).toLocaleTimeString()}
+            </p>
+          )}
+        </header>
 
-      <main>
-        <h2 style={{ marginBottom: '16px' }}>Menu</h2>
+        <main>
+          <h2 style={{ marginBottom: '16px' }}>Menu</h2>
 
-        <CategoryTabs
-          categories={categories}
-          selectedCategoryId={selectedCategoryId}
-          onSelectCategory={setSelectedCategoryId}
-        />
+          <CategoryTabs
+            categories={categories}
+            selectedCategoryId={selectedCategoryId}
+            onSelectCategory={setSelectedCategoryId}
+          />
 
-        {loadingProducts ? (
-          <p>Loading products...</p>
-        ) : products.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#999', padding: '40px 0' }}>
-            No products available in this category
-          </p>
-        ) : (
-          <div>
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+          {loadingProducts ? (
+            <p>Loading products...</p>
+          ) : products.length === 0 ? (
+            <p style={{ textAlign: 'center', color: '#999', padding: '40px 0' }}>
+              No products available in this category
+            </p>
+          ) : (
+            <div>
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Cart Icon */}
+      <CartIcon onClick={() => setIsCartOpen(true)} />
+
+      {/* Shopping Cart Sidebar */}
+      <ShoppingCart
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        onCheckout={handleCheckout}
+      />
+    </>
   )
 }
 

@@ -1,10 +1,23 @@
 import { Product } from '@infrastructure/api/productsApi'
+import { useCartStore } from '../../src/store/cartStore'
 
 interface ProductCardProps {
   product: Product
 }
 
 function ProductCard({ product }: ProductCardProps) {
+  const addItem = useCartStore(state => state.addItem)
+
+  const handleAddToCart = () => {
+    addItem({
+      productId: product.id,
+      name: product.name,
+      description: product.description || '',
+      price: product.price,
+      currency: product.currency
+    }, 1)
+  }
+
   return (
     <div style={{
       border: '1px solid #ddd',
@@ -23,7 +36,7 @@ function ProductCard({ product }: ProductCardProps) {
             </p>
           )}
           {product.allergens && product.allergens.length > 0 && (
-            <div style={{ fontSize: '0.85em', color: '#e74c3c' }}>
+            <div style={{ fontSize: '0.85em', color: '#e74c3c', marginBottom: '12px' }}>
               <strong>Allergens:</strong> {product.allergens.join(', ')}
             </div>
           )}
@@ -37,6 +50,30 @@ function ProductCard({ product }: ProductCardProps) {
           {product.price.toFixed(2)} {product.currency}
         </div>
       </div>
+      <button
+        onClick={handleAddToCart}
+        style={{
+          width: '100%',
+          padding: '12px',
+          marginTop: '12px',
+          backgroundColor: '#27ae60',
+          color: 'white',
+          border: 'none',
+          borderRadius: '6px',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          cursor: 'pointer',
+          transition: 'background-color 0.2s'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = '#229954'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = '#27ae60'
+        }}
+      >
+        Add to Cart
+      </button>
     </div>
   )
 }

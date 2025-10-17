@@ -30,6 +30,7 @@
       "@presentation/*": ["./presentation/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "presentation/**/*.ts", "presentation/**/*.tsx", "infrastructure/**/*.ts", "infrastructure/**/*.tsx", "domain/**/*.ts", "domain/**/*.tsx", "application/**/*.ts", "application/**/*.tsx"],
+  "exclude": ["node_modules", "dist"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

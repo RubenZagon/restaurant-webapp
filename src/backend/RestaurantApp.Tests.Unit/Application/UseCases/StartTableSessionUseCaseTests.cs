@@ -1,5 +1,5 @@
 using FluentAssertions;
-using NSubstitute;
+using Moq;
 using RestaurantApp.Application.Ports;
 using RestaurantApp.Application.UseCases;
 using RestaurantApp.Domain.Entities;
@@ -10,13 +10,13 @@ namespace RestaurantApp.Tests.Unit.Application.UseCases;
 
 public class StartTableSessionUseCaseTests
 {
-    private readonly ITableRepository _tableRepository;
+    private readonly Mock<ITableRepository> _tableRepositoryMock;
     private readonly StartTableSessionUseCase _useCase;
 
     public StartTableSessionUseCaseTests()
     {
-        _tableRepository = Substitute.For<ITableRepository>();
-        _useCase = new StartTableSessionUseCase(_tableRepository);
+        _tableRepositoryMock = new Mock<ITableRepository>();
+        _useCase = new StartTableSessionUseCase(_tableRepositoryMock.Object);
     }
 
     [Fact]
@@ -25,7 +25,7 @@ public class StartTableSessionUseCaseTests
         // Arrange
         var tableId = new TableId(5);
         var table = new Table(tableId);
-        _tableRepository.GetById(tableId).Returns(table);
+        _tableRepositoryMock.Setup(r => r.GetById(tableId)).ReturnsAsync(table);
 
         // Act
         var result = await _useCase.Execute(tableId.Value);
@@ -36,7 +36,7 @@ public class StartTableSessionUseCaseTests
         result.Value!.SessionId.Should().NotBeEmpty();
         result.Value.TableNumber.Should().Be(5);
         table.IsOccupied.Should().BeTrue();
-        await _tableRepository.Received(1).Save(table);
+        _tableRepositoryMock.Verify(r => r.Save(table), Times.Once);
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public class StartTableSessionUseCaseTests
     {
         // Arrange
         var tableId = new TableId(999);
-        _tableRepository.GetById(tableId).Returns((Table?)null);
+        _tableRepositoryMock.Setup(r => r.GetById(tableId)).ReturnsAsync((Table?)null);
 
         // Act
         var result = await _useCase.Execute(tableId.Value);
@@ -52,7 +52,7 @@ public class StartTableSessionUseCaseTests
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Contain("does not exist");
-        await _tableRepository.DidNotReceive().Save(Arg.Any<Table>());
+        _tableRepositoryMock.Verify(r => r.Save(It.IsAny<Table>()), Times.Never);
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public class StartTableSessionUseCaseTests
         var tableId = new TableId(5);
         var table = new Table(tableId);
         table.StartSession(); // Table already occupied
-        _tableRepository.GetById(tableId).Returns(table);
+        _tableRepositoryMock.Setup(r => r.GetById(tableId)).ReturnsAsync(table);
 
         // Act
         var result = await _useCase.Execute(tableId.Value);

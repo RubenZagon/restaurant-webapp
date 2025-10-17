@@ -23,10 +23,13 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<ITableRepository, InMemoryTableRepository>();
 builder.Services.AddSingleton<ICategoryRepository, InMemoryCategoryRepository>();
 builder.Services.AddSingleton<IProductRepository, InMemoryProductRepository>();
+builder.Services.AddSingleton<IOrderRepository, InMemoryOrderRepository>();
 
 builder.Services.AddScoped<StartTableSessionUseCase>();
 builder.Services.AddScoped<GetAllCategoriesUseCase>();
 builder.Services.AddScoped<GetProductsByCategoryUseCase>();
+builder.Services.AddScoped<GetOrCreateOrderForTableUseCase>();
+builder.Services.AddScoped<AddProductToOrderUseCase>();
 
 // CORS configuration
 builder.Services.AddCors(options =>

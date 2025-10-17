@@ -37,7 +37,7 @@ public sealed record Allergens
 
     public static Allergens None()
     {
-        return new Allergens(null);
+        return new Allergens(Enumerable.Empty<string>());
     }
 
     public override string ToString()
