@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { startTableSession } from '@infrastructure/api/tableApi'
+import { getAllCategories, getProductsByCategory, Category, Product } from '@infrastructure/api/productsApi'
+import CategoryTabs from '../components/CategoryTabs'
+import ProductCard from '../components/ProductCard'
 
 interface SessionData {
   sessionId: string
@@ -11,27 +14,61 @@ interface SessionData {
 function MenuPage() {
   const { tableNumber } = useParams<{ tableNumber: string }>()
   const [session, setSession] = useState<SessionData | null>(null)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
+  const [products, setProducts] = useState<Product[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadingProducts, setLoadingProducts] = useState(false)
 
   useEffect(() => {
-    const initSession = async () => {
+    const init = async () => {
       if (!tableNumber) return
 
       try {
         setLoading(true)
-        const data = await startTableSession(parseInt(tableNumber))
-        setSession(data)
+
+        // Start session
+        const sessionData = await startTableSession(parseInt(tableNumber))
+        setSession(sessionData)
+
+        // Load categories
+        const categoriesData = await getAllCategories()
+        setCategories(categoriesData)
+
+        // Auto-select first category
+        if (categoriesData.length > 0) {
+          setSelectedCategoryId(categoriesData[0].id)
+        }
+
         setError(null)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error starting session')
+        setError(err instanceof Error ? err.message : 'Error loading data')
       } finally {
         setLoading(false)
       }
     }
 
-    initSession()
+    init()
   }, [tableNumber])
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      if (!selectedCategoryId) return
+
+      try {
+        setLoadingProducts(true)
+        const productsData = await getProductsByCategory(selectedCategoryId)
+        setProducts(productsData)
+      } catch (err) {
+        console.error('Error loading products:', err)
+      } finally {
+        setLoadingProducts(false)
+      }
+    }
+
+    loadProducts()
+  }, [selectedCategoryId])
 
   if (loading) {
     return (
@@ -64,20 +101,37 @@ function MenuPage() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <header style={{ marginBottom: '40px' }}>
+      <header style={{ marginBottom: '24px' }}>
         <h1>Table {tableNumber}</h1>
         {session && (
-          <p style={{ marginTop: '10px', opacity: 0.8 }}>
-            Session started: {new Date(session.startedAt).toLocaleString()}
+          <p style={{ marginTop: '8px', opacity: 0.7, fontSize: '0.9em' }}>
+            Session: {new Date(session.startedAt).toLocaleTimeString()}
           </p>
         )}
       </header>
 
       <main>
-        <h2>Menu</h2>
-        <p style={{ marginTop: '20px' }}>
-          The product catalog will be implemented in the next phase.
-        </p>
+        <h2 style={{ marginBottom: '16px' }}>Menu</h2>
+
+        <CategoryTabs
+          categories={categories}
+          selectedCategoryId={selectedCategoryId}
+          onSelectCategory={setSelectedCategoryId}
+        />
+
+        {loadingProducts ? (
+          <p>Loading products...</p>
+        ) : products.length === 0 ? (
+          <p style={{ textAlign: 'center', color: '#999', padding: '40px 0' }}>
+            No products available in this category
+          </p>
+        ) : (
+          <div>
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </main>
     </div>
   )

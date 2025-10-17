@@ -21,7 +21,12 @@ builder.Services.AddSwaggerGen();
 
 // Register application services (Dependency Injection)
 builder.Services.AddSingleton<ITableRepository, InMemoryTableRepository>();
+builder.Services.AddSingleton<ICategoryRepository, InMemoryCategoryRepository>();
+builder.Services.AddSingleton<IProductRepository, InMemoryProductRepository>();
+
 builder.Services.AddScoped<StartTableSessionUseCase>();
+builder.Services.AddScoped<GetAllCategoriesUseCase>();
+builder.Services.AddScoped<GetProductsByCategoryUseCase>();
 
 // CORS configuration
 builder.Services.AddCors(options =>
