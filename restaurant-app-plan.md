@@ -7,14 +7,16 @@
 - **Fase 2**: Core del Dominio - **100% COMPLETA**
 - **Fase 3**: Sistema de Pedidos - **95% COMPLETA** (Backend + Frontend completos, E2E tests pendientes)
 - **Fase 4**: Notificaciones en Tiempo Real - **100% COMPLETA**
+- **Fase 5**: Sistema de Pagos - **100% COMPLETA**
 
 ### 📈 Métricas Actuales
-- **Tests Unitarios Backend**: 55+ tests pasando
+- **Tests Unitarios Backend**: 75+ tests pasando (incluye PaymentId y Payment entity)
 - **Cobertura de Tests**: ~85% en dominio
 - **Build Status**: ✅ Backend | ✅ Frontend
 - **Vulnerabilidades npm**: 0 (actualizado)
 - **Framework Testing**: Moq 4.18.4 (migrado desde NSubstitute)
 - **Real-time Communication**: SignalR WebSockets implementado
+- **Payment System**: Mock Payment Gateway con 90% success rate
 
 ### 🔧 Stack Implementado
 - **Backend**: .NET 8.0.415 con Arquitectura Hexagonal
@@ -670,38 +672,405 @@ export function useOrderNotifications(tableNumber: number): UseOrderNotification
 
 ---
 
-## 💳 FASE 5: Sistema de Pagos (2 semanas) - ⏳ PENDIENTE
+## 💳 FASE 5: Sistema de Pagos - ✅ COMPLETADA
 
-### 5.1 Integración con Pasarela de Pago (Mock)
+### 5.1 Implementación Backend ✅
 
-**Puerto (Hexagonal Architecture):**
+**Domain Layer - Payment Entity with State Machine:** ✅ IMPLEMENTADO
 ```csharp
-public interface IPaymentGateway
+// ✅ Payment Entity with State Machine (15+ tests)
+public class Payment : Entity
 {
-    Task<PaymentResult> ProcessPayment(PaymentRequest request);
-    Task<PaymentStatus> CheckStatus(PaymentId id);
+    public PaymentId Id { get; private set; }
+    public OrderId OrderId { get; private set; }
+    public Price Amount { get; private set; }
+    public PaymentStatus Status { get; private set; }  // Pending, Processing, Completed, Failed, Cancelled, Refunded
+    public string? TransactionId { get; private set; }
+    public string? FailureReason { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public DateTime? ProcessedAt { get; private set; }
+
+    public static Payment Create(OrderId orderId, Price amount);
+    public void MarkAsProcessing();
+    public void MarkAsCompleted(string? transactionId);
+    public void MarkAsFailed(string? failureReason);
+    public void Cancel();
+    public bool IsSuccessful() => Status == PaymentStatus.Completed;
 }
 
-// Implementación Mock para demo
-public class MockPaymentGateway : IPaymentGateway
+// ✅ PaymentId Value Object (6 tests)
+public record PaymentId
 {
-    // Simula respuestas de Stripe/PayPal
+    public Guid Value { get; }
+    public PaymentId(Guid value);
+    public override string ToString() => Value.ToString();
+}
+
+// ✅ PaymentStatus Enum
+public enum PaymentStatus
+{
+    Pending,      // Initial state
+    Processing,   // Payment being processed
+    Completed,    // Payment successful
+    Failed,       // Payment failed
+    Cancelled,    // Payment cancelled
+    Refunded      // Payment refunded
 }
 ```
 
-### 5.2 Flujo de Pago
+**Hexagonal Architecture - Ports & Adapters:** ✅ IMPLEMENTADO
+```csharp
+// ✅ Port - Application Layer
+public interface IPaymentGateway
+{
+    Task<PaymentResult> ProcessPayment(PaymentRequest request);
+    Task<PaymentStatusResult> CheckStatus(PaymentId paymentId);
+}
 
-1. Cliente solicita pagar
-2. Sistema calcula total con impuestos
-3. Genera intento de pago
-4. Mock gateway aprueba (demo)
-5. Actualiza estado pedido
-6. Notifica a cocina
+public record PaymentRequest(
+    PaymentId PaymentId,
+    Price Amount,
+    string PaymentMethod,
+    Dictionary<string, string>? Metadata = null
+);
 
-**Consideraciones de Seguridad:**
-- Tokenización de tarjetas (simulado)
-- PCI compliance (documentado)
-- Logs de auditoría
+public record PaymentResult(
+    bool Success,
+    string? TransactionId = null,
+    string? ErrorMessage = null,
+    string? ErrorCode = null
+);
+
+// ✅ Adapter - Infrastructure Layer
+public class MockPaymentGateway : IPaymentGateway
+{
+    private readonly ILogger<MockPaymentGateway> _logger;
+    private readonly double _successRate;
+    private readonly Random _random = new();
+
+    public MockPaymentGateway(ILogger<MockPaymentGateway> logger, double successRate = 0.9)
+    {
+        _logger = logger;
+        _successRate = successRate;
+    }
+
+    public async Task<PaymentResult> ProcessPayment(PaymentRequest request)
+    {
+        // Simulate network delay
+        await Task.Delay(_random.Next(100, 500));
+
+        // Simulate success/failure based on success rate
+        if (_random.NextDouble() < _successRate)
+        {
+            var transactionId = $"TXN_{Guid.NewGuid().ToString()[..8]}";
+            _logger.LogInformation("Payment processed successfully: {TransactionId}", transactionId);
+            return new PaymentResult(Success: true, TransactionId: transactionId);
+        }
+        else
+        {
+            // Realistic error codes
+            var errorCodes = new[]
+            {
+                ("insufficient_funds", "Insufficient funds in account"),
+                ("card_declined", "Card was declined by issuer"),
+                ("expired_card", "Card has expired"),
+                ("invalid_card", "Invalid card number"),
+                ("processing_error", "Payment processing error"),
+                ("network_timeout", "Network timeout during payment")
+            };
+
+            var (errorCode, errorMessage) = errorCodes[_random.Next(errorCodes.Length)];
+            _logger.LogWarning("Payment failed: {ErrorCode} - {ErrorMessage}", errorCode, errorMessage);
+            return new PaymentResult(Success: false, ErrorCode: errorCode, ErrorMessage: errorMessage);
+        }
+    }
+}
+```
+
+**Repository Pattern:** ✅ IMPLEMENTADO
+```csharp
+// ✅ Port
+public interface IPaymentRepository
+{
+    Task<Payment?> GetById(PaymentId id);
+    Task<Payment?> GetByOrderId(OrderId orderId);
+    Task Save(Payment payment);
+}
+
+// ✅ Adapter
+public class InMemoryPaymentRepository : IPaymentRepository
+{
+    private readonly ConcurrentDictionary<Guid, Payment> _payments = new();
+    // Implementation with thread-safe operations
+}
+```
+
+**Use Case - Payment Workflow Orchestration:** ✅ IMPLEMENTADO
+```csharp
+// ✅ ProcessPaymentUseCase - Orchestrates complete payment flow
+public class ProcessPaymentUseCase
+{
+    private readonly IOrderRepository _orderRepository;
+    private readonly IPaymentRepository _paymentRepository;
+    private readonly IPaymentGateway _paymentGateway;
+
+    public async Task<Result<PaymentDto>> Execute(Guid orderId, string paymentMethod)
+    {
+        // 1. Validate order exists and is confirmed
+        var order = await _orderRepository.GetById(OrderId.From(orderId));
+        if (order == null)
+            return Result<PaymentDto>.Failure("Order not found");
+
+        if (order.Status != OrderStatus.Confirmed)
+            return Result<PaymentDto>.Failure($"Order must be confirmed before payment. Current status: {order.Status}");
+
+        // 2. Check if payment already exists
+        var existingPayment = await _paymentRepository.GetByOrderId(order.Id);
+        if (existingPayment != null && existingPayment.IsSuccessful())
+            return Result<PaymentDto>.Failure("Payment has already been completed for this order");
+
+        // 3. Create payment entity
+        var payment = Payment.Create(order.Id, order.Total);
+        await _paymentRepository.Save(payment);
+
+        // 4. Mark payment as processing
+        payment.MarkAsProcessing();
+        await _paymentRepository.Save(payment);
+
+        // 5. Process payment through gateway
+        var paymentRequest = new PaymentRequest(
+            PaymentId: payment.Id,
+            Amount: order.Total,
+            PaymentMethod: paymentMethod,
+            Metadata: new Dictionary<string, string>
+            {
+                { "orderId", orderId.ToString() },
+                { "tableNumber", order.TableId.Value.ToString() }
+            }
+        );
+
+        var paymentResult = await _paymentGateway.ProcessPayment(paymentRequest);
+
+        // 6. Update payment based on gateway result
+        if (paymentResult.Success)
+        {
+            payment.MarkAsCompleted(paymentResult.TransactionId!);
+            await _paymentRepository.Save(payment);
+            return Result<PaymentDto>.Success(MapToDto(payment));
+        }
+        else
+        {
+            var failureReason = $"{paymentResult.ErrorCode}: {paymentResult.ErrorMessage}";
+            payment.MarkAsFailed(failureReason);
+            await _paymentRepository.Save(payment);
+            return Result<PaymentDto>.Failure($"Payment failed: {paymentResult.ErrorMessage}");
+        }
+    }
+}
+```
+
+**API Controller:** ✅ IMPLEMENTADO
+```csharp
+// ✅ POST /api/payments/orders/{orderId}
+[HttpPost("orders/{orderId}")]
+public async Task<IActionResult> ProcessPayment(
+    Guid orderId,
+    [FromBody] ProcessPaymentRequest request)
+{
+    var result = await _processPaymentUseCase.Execute(orderId, request.PaymentMethod);
+
+    if (result.IsSuccess)
+        return Ok(new { success = true, data = result.Value });
+
+    return BadRequest(new { success = false, error = result.Error });
+}
+```
+
+**Dependency Injection:** ✅ CONFIGURADO
+```csharp
+// ✅ Program.cs
+builder.Services.AddSingleton<IPaymentRepository, InMemoryPaymentRepository>();
+builder.Services.AddSingleton<IPaymentGateway>(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<MockPaymentGateway>>();
+    return new MockPaymentGateway(logger, successRate: 0.9); // 90% success rate
+});
+builder.Services.AddScoped<ProcessPaymentUseCase>();
+```
+
+### 5.2 Frontend Implementation ✅
+
+**Payment API Client:** ✅ IMPLEMENTADO
+```typescript
+// ✅ infrastructure/api/paymentsApi.ts
+export async function processPayment(
+  orderId: string,
+  paymentMethod: string
+): Promise<ProcessPaymentResponse> {
+  const response = await axios.post<ProcessPaymentResponse>(
+    `${API_BASE_URL}/api/payments/orders/${orderId}`,
+    { paymentMethod }
+  )
+  return response.data
+}
+
+export interface PaymentDto {
+  id: string
+  orderId: string
+  amount: number
+  currency: string
+  status: string
+  transactionId?: string
+  failureReason?: string
+  createdAt: string
+  processedAt?: string
+}
+
+export interface ProcessPaymentResponse {
+  success: boolean
+  data?: PaymentDto
+  error?: string
+}
+```
+
+**PaymentModal Component:** ✅ IMPLEMENTADO
+```typescript
+// ✅ src/presentation/components/PaymentModal.tsx
+export function PaymentModal({
+  isOpen,
+  onClose,
+  onConfirmPayment,
+  totalAmount,
+  currency,
+  isProcessing
+}: PaymentModalProps) {
+  const [selectedMethod, setSelectedMethod] = useState<string>('credit_card')
+
+  const paymentMethods = [
+    { id: 'credit_card', name: 'Credit Card', icon: '💳' },
+    { id: 'debit_card', name: 'Debit Card', icon: '💳' },
+    { id: 'cash', name: 'Cash', icon: '💵' }
+  ]
+
+  // Modal with payment method selection, total display, processing indicator
+  // Responsive design with inline styles
+}
+```
+
+**ShoppingCart Enhancement:** ✅ IMPLEMENTADO
+```typescript
+// ✅ Enhanced with payment flow support
+interface ShoppingCartProps {
+  isOpen: boolean
+  onClose: () => void
+  onCheckout: () => void
+  onPayment?: () => void        // NEW: Opens payment modal
+  submitting?: boolean
+  orderConfirmed?: boolean      // NEW: Shows post-confirmation state
+}
+
+// Conditional rendering:
+// - Pre-confirmation: "Confirm Order" button
+// - Post-confirmation: "✓ Order confirmed! Ready to pay." + "Proceed to Payment" button
+```
+
+**MenuPage Integration:** ✅ IMPLEMENTADO
+```typescript
+// ✅ Complete payment flow in MenuPage.tsx
+const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
+const [processingPayment, setProcessingPayment] = useState(false)
+const [orderConfirmed, setOrderConfirmed] = useState(false)
+
+const handleOpenPayment = () => {
+  setIsCartOpen(false)
+  setIsPaymentModalOpen(true)
+}
+
+const handlePayment = async (paymentMethod: string) => {
+  setProcessingPayment(true)
+  const result = await processPayment(orderId, paymentMethod)
+
+  if (result.success) {
+    showToast('Payment successful! Thank you for your order.', 'success')
+    setIsPaymentModalOpen(false)
+
+    // Clear cart and reset state
+    useCartStore.getState().clearCart()
+    setOrderConfirmed(false)
+
+    // Create new order for future items
+    setTimeout(async () => {
+      const newOrder = await getOrCreateOrderForTable(parseInt(tableNumber!))
+      setOrderId(newOrder.id)
+    }, 1000)
+  } else {
+    showToast(`Payment failed: ${result.error}`, 'error')
+  }
+
+  setProcessingPayment(false)
+}
+```
+
+### 5.3 Testing ✅
+
+**Domain Tests (TDD):** ✅ IMPLEMENTADOS
+```csharp
+// ✅ PaymentIdTests.cs - 6 tests
+"Create_WithValidGuid_ShouldCreatePaymentId"
+"Create_WithEmptyGuid_ShouldThrowDomainException"
+"TwoPaymentIds_WithSameValue_ShouldBeEqual"
+"ToString_ShouldReturnGuidString"
+"ImplicitConversionToGuid_ShouldWork"
+"GetHashCode_ShouldBeConsistent"
+
+// ✅ PaymentTests.cs - 15+ tests
+"Create_WithValidData_ShouldCreatePayment"
+"MarkAsProcessing_FromPending_ShouldChangeStatus"
+"MarkAsProcessing_FromNonPending_ShouldThrowException"
+"MarkAsCompleted_WithTransactionId_ShouldMarkAsCompleted"
+"MarkAsCompleted_WithoutTransactionId_ShouldThrowException"
+"MarkAsFailed_WithReason_ShouldMarkAsFailed"
+"MarkAsFailed_WithoutReason_ShouldThrowException"
+"Cancel_FromProcessing_ShouldCancelPayment"
+"Cancel_FromCompleted_ShouldThrowException"
+"IsSuccessful_WhenCompleted_ShouldReturnTrue"
+"IsSuccessful_WhenNotCompleted_ShouldReturnFalse"
+"ProcessedAt_WhenCompleted_ShouldBeSet"
+"Total_StateMachine_WorksCorrectly"
+```
+
+**Build Status:** ✅ COMPLETADO
+- Backend: 0 errors, 0 warnings
+- Frontend: 0 errors, build successful (8.12s)
+
+### 5.4 Documentation ✅
+
+**Comprehensive Documentation Created:**
+- ✅ `/docs/PAYMENT_SYSTEM.md` with 5 mermaid diagrams:
+  1. Hexagonal Architecture diagram
+  2. Payment Flow Sequence diagram
+  3. Payment State Machine diagram
+  4. Component Interaction diagram
+  5. Domain Model Class diagram
+
+- ✅ Manual testing guide with 3 scenarios
+- ✅ API documentation with request/response examples
+- ✅ Troubleshooting section
+- ✅ Future enhancements roadmap
+- ✅ 7 design patterns documented
+
+### 5.5 Features Implemented ✅
+
+1. ✅ **Payment Processing**: Complete workflow from order confirmation to payment completion
+2. ✅ **State Machine**: 6-state payment lifecycle with validation
+3. ✅ **Mock Gateway**: Realistic simulation with 90% success rate and 6 error scenarios
+4. ✅ **Hexagonal Architecture**: Clean separation with ports and adapters
+5. ✅ **Payment Methods**: Support for credit_card, debit_card, cash
+6. ✅ **Error Handling**: Comprehensive validation and error messages
+7. ✅ **UI/UX**: PaymentModal with method selection and processing feedback
+8. ✅ **Toast Notifications**: Success/failure feedback to users
+9. ✅ **Automatic Cart Reset**: Cart clears and new order created after successful payment
+10. ✅ **Business Rule Validation**: Cannot pay unconfirmed orders, duplicate payments prevented
 
 ---
 
@@ -895,14 +1264,14 @@ k6 run --vus 100 --duration 30s load-test.js
 | 2. Core Dominio | ✅ **COMPLETADA** | 1 semana | Gestión mesas y menú |
 | 3. Pedidos | ✅ **95% COMPLETADA** | 1.5 semanas | Backend + Frontend + API integration |
 | 4. Notificaciones Real-time | ✅ **COMPLETADA** | 1 semana | SignalR + Domain Events |
-| 5. Pagos | ⏳ **PENDIENTE** | 2 semanas | Integración pasarela (mock) |
+| 5. Pagos | ✅ **COMPLETADA** | 1 semana | Payment system con Mock Gateway |
 | 6. Panel Cocina | ⏳ **PENDIENTE** | 1.5 semanas | Dashboard tiempo real |
 | 7. DevOps | ⏳ **PENDIENTE** | 1 semana | Despliegue producción |
 | 8. Optimización | ⏳ **PENDIENTE** | 1 semana | Monitoreo y métricas |
 | 9. Seguridad | 🟡 **PARCIAL** | - | Dependencias actualizadas |
 | 10. Analytics | ⏳ **PENDIENTE** | Continuo | Analytics y mejoras |
-| **PROGRESO ACTUAL** | **~60%** | **4.5 semanas** | **MVP Funcional con real-time** |
-| **ESTIMADO RESTANTE** | - | **6-7 semanas** | **MVP Completo** |
+| **PROGRESO ACTUAL** | **~70%** | **5.5 semanas** | **MVP Funcional completo** |
+| **ESTIMADO RESTANTE** | - | **4-5 semanas** | **MVP Producción** |
 
 ---
 
