@@ -47,6 +47,8 @@ builder.Services.AddScoped<GetOrCreateOrderForTableUseCase>();
 builder.Services.AddScoped<AddProductToOrderUseCase>();
 builder.Services.AddScoped<ConfirmOrderUseCase>();
 builder.Services.AddScoped<ProcessPaymentUseCase>();
+builder.Services.AddScoped<UpdateOrderStatusUseCase>();
+builder.Services.AddScoped<GetAllActiveOrdersUseCase>();
 
 // CORS configuration
 builder.Services.AddCors(options =>

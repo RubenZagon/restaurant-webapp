@@ -22,3 +22,6 @@ public record OrderLineDto(
 public record AddProductToOrderRequest(
     Guid ProductId,
     int Quantity);
+
+public record UpdateOrderStatusRequest(
+    string Status);

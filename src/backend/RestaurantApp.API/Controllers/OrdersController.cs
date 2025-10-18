@@ -12,17 +12,23 @@ public class OrdersController : ControllerBase
     private readonly GetOrCreateOrderForTableUseCase _getOrCreateOrderUseCase;
     private readonly AddProductToOrderUseCase _addProductUseCase;
     private readonly ConfirmOrderUseCase _confirmOrderUseCase;
+    private readonly UpdateOrderStatusUseCase _updateOrderStatusUseCase;
+    private readonly GetAllActiveOrdersUseCase _getAllActiveOrdersUseCase;
 
     public OrdersController(
         ILogger<OrdersController> logger,
         GetOrCreateOrderForTableUseCase getOrCreateOrderUseCase,
         AddProductToOrderUseCase addProductUseCase,
-        ConfirmOrderUseCase confirmOrderUseCase)
+        ConfirmOrderUseCase confirmOrderUseCase,
+        UpdateOrderStatusUseCase updateOrderStatusUseCase,
+        GetAllActiveOrdersUseCase getAllActiveOrdersUseCase)
     {
         _logger = logger;
         _getOrCreateOrderUseCase = getOrCreateOrderUseCase;
         _addProductUseCase = addProductUseCase;
         _confirmOrderUseCase = confirmOrderUseCase;
+        _updateOrderStatusUseCase = updateOrderStatusUseCase;
+        _getAllActiveOrdersUseCase = getAllActiveOrdersUseCase;
     }
 
     [HttpGet("table/{tableNumber}")]
@@ -70,6 +76,38 @@ public class OrdersController : ControllerBase
         if (!result.IsSuccess)
         {
             _logger.LogWarning("Error confirming order {OrderId}: {Error}", orderId, result.Error);
+            return BadRequest(new { error = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPut("{orderId}/status")]
+    public async Task<IActionResult> UpdateOrderStatus(Guid orderId, [FromBody] UpdateOrderStatusRequest request)
+    {
+        _logger.LogInformation("Updating order {OrderId} to status {Status}", orderId, request.Status);
+
+        var result = await _updateOrderStatusUseCase.Execute(orderId, request.Status);
+
+        if (!result.IsSuccess)
+        {
+            _logger.LogWarning("Error updating order status: {Error}", result.Error);
+            return BadRequest(new { error = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("active")]
+    public async Task<IActionResult> GetAllActiveOrders()
+    {
+        _logger.LogInformation("Getting all active orders for kitchen dashboard");
+
+        var result = await _getAllActiveOrdersUseCase.Execute();
+
+        if (!result.IsSuccess)
+        {
+            _logger.LogWarning("Error getting active orders: {Error}", result.Error);
             return BadRequest(new { error = result.Error });
         }
 

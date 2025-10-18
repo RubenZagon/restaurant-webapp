@@ -48,3 +48,23 @@ export const confirmOrder = async (orderId: string): Promise<Order> => {
   const response = await axios.post<Order>(`${API_BASE_URL}/orders/${orderId}/confirm`)
   return response.data
 }
+
+export interface UpdateOrderStatusRequest {
+  status: string
+}
+
+export const updateOrderStatus = async (
+  orderId: string,
+  status: string
+): Promise<Order> => {
+  const response = await axios.put<Order>(
+    `${API_BASE_URL}/orders/${orderId}/status`,
+    { status }
+  )
+  return response.data
+}
+
+export const getAllActiveOrders = async (): Promise<Order[]> => {
+  const response = await axios.get<Order[]>(`${API_BASE_URL}/orders/active`)
+  return response.data
+}
