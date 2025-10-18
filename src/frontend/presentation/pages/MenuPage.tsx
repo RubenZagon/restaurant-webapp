@@ -9,6 +9,7 @@ import { CartIcon } from '../../src/presentation/components/CartIcon'
 import { ShoppingCart } from '../../src/presentation/components/ShoppingCart'
 import { Toast, ToastType } from '../../src/presentation/components/Toast'
 import { useCartStore } from '../../src/store/cartStore'
+import { useOrderNotifications } from '../../src/hooks/useOrderNotifications'
 
 interface SessionData {
   sessionId: string
@@ -33,9 +34,36 @@ function MenuPage() {
   const setOrderId = useCartStore(state => state.setOrderId)
   const orderId = useCartStore(state => state.orderId)
 
+  // SignalR real-time notifications
+  const { isConnected, lastNotification, error: signalRError } = useOrderNotifications(
+    tableNumber ? parseInt(tableNumber) : 0
+  )
+
   const showToast = (message: string, type: ToastType) => {
     setToast({ message, type })
   }
+
+  // Handle incoming SignalR notifications
+  useEffect(() => {
+    if (lastNotification) {
+      console.log('Received notification:', lastNotification)
+
+      if (lastNotification.type === 'OrderStatusChanged') {
+        const statusNotification = lastNotification as any
+        showToast(
+          `Your order status changed to: ${statusNotification.newStatus}`,
+          'info'
+        )
+      }
+    }
+  }, [lastNotification])
+
+  // Show SignalR connection errors
+  useEffect(() => {
+    if (signalRError) {
+      console.error('SignalR error:', signalRError)
+    }
+  }, [signalRError])
 
   useEffect(() => {
     const init = async () => {
@@ -164,12 +192,35 @@ function MenuPage() {
 
       <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
         <header style={{ marginBottom: '24px' }}>
-          <h1>Table {tableNumber}</h1>
-          {session && (
-            <p style={{ marginTop: '8px', opacity: 0.7, fontSize: '0.9em' }}>
-              Session: {new Date(session.startedAt).toLocaleTimeString()}
-            </p>
-          )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h1>Table {tableNumber}</h1>
+              {session && (
+                <p style={{ marginTop: '8px', opacity: 0.7, fontSize: '0.9em' }}>
+                  Session: {new Date(session.startedAt).toLocaleTimeString()}
+                </p>
+              )}
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              backgroundColor: isConnected ? '#e8f5e9' : '#ffebee',
+              fontSize: '0.85em'
+            }}>
+              <div style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: isConnected ? '#4caf50' : '#f44336'
+              }} />
+              <span style={{ color: isConnected ? '#2e7d32' : '#c62828' }}>
+                {isConnected ? 'Live' : 'Disconnected'}
+              </span>
+            </div>
+          </div>
         </header>
 
         <main>

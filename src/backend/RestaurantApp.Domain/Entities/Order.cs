@@ -1,9 +1,11 @@
+using RestaurantApp.Domain.Common;
+using RestaurantApp.Domain.Events;
 using RestaurantApp.Domain.Exceptions;
 using RestaurantApp.Domain.ValueObjects;
 
 namespace RestaurantApp.Domain.Entities;
 
-public class Order
+public class Order : Entity
 {
     private readonly List<OrderLine> _lines = new();
 
@@ -92,8 +94,13 @@ public class Order
                 $"Cannot confirm order in status {Status}. Only Draft orders can be confirmed.");
         }
 
+        var oldStatus = Status;
         Status = OrderStatus.Confirmed;
         ConfirmedAt = DateTime.UtcNow;
+
+        // Raise domain events
+        RaiseDomainEvent(new OrderConfirmedEvent(Id, TableId.Value));
+        RaiseDomainEvent(new OrderStatusChangedEvent(Id, TableId.Value, oldStatus, Status));
     }
 
     public void Cancel()
@@ -118,7 +125,9 @@ public class Order
             throw new DomainException("Only confirmed orders can be marked as preparing.");
         }
 
+        var oldStatus = Status;
         Status = OrderStatus.Preparing;
+        RaiseDomainEvent(new OrderStatusChangedEvent(Id, TableId.Value, oldStatus, Status));
     }
 
     public void MarkAsReady()
@@ -128,7 +137,9 @@ public class Order
             throw new DomainException("Only preparing orders can be marked as ready.");
         }
 
+        var oldStatus = Status;
         Status = OrderStatus.Ready;
+        RaiseDomainEvent(new OrderStatusChangedEvent(Id, TableId.Value, oldStatus, Status));
     }
 
     public void MarkAsDelivered()
@@ -138,7 +149,9 @@ public class Order
             throw new DomainException("Only ready orders can be marked as delivered.");
         }
 
+        var oldStatus = Status;
         Status = OrderStatus.Delivered;
+        RaiseDomainEvent(new OrderStatusChangedEvent(Id, TableId.Value, oldStatus, Status));
     }
 
     private void EnsureCanBeModified()

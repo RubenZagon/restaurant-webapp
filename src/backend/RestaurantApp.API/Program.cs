@@ -1,6 +1,8 @@
 using RestaurantApp.Application.Ports;
+using RestaurantApp.Application.Services;
 using RestaurantApp.Application.UseCases;
 using RestaurantApp.Infrastructure.Persistence;
+using RestaurantApp.Infrastructure.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +26,10 @@ builder.Services.AddSingleton<ITableRepository, InMemoryTableRepository>();
 builder.Services.AddSingleton<ICategoryRepository, InMemoryCategoryRepository>();
 builder.Services.AddSingleton<IProductRepository, InMemoryProductRepository>();
 builder.Services.AddSingleton<IOrderRepository, InMemoryOrderRepository>();
+
+// Register SignalR services
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IOrderNotificationService, OrderNotificationService>();
 
 builder.Services.AddScoped<StartTableSessionUseCase>();
 builder.Services.AddScoped<GetAllCategoriesUseCase>();
@@ -59,6 +65,9 @@ app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+// Map SignalR hub
+app.MapHub<OrderNotificationHub>("/hubs/order-notifications");
 
 try
 {
