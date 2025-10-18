@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { startTableSession } from '@infrastructure/api/tableApi'
 import { getAllCategories, getProductsByCategory, Category, Product } from '@infrastructure/api/productsApi'
+import { getOrCreateOrderForTable, confirmOrder } from '@infrastructure/api/ordersApi'
 import CategoryTabs from '../components/CategoryTabs'
 import ProductCard from '../components/ProductCard'
 import { CartIcon } from '../../src/presentation/components/CartIcon'
 import { ShoppingCart } from '../../src/presentation/components/ShoppingCart'
+import { Toast, ToastType } from '../../src/presentation/components/Toast'
 import { useCartStore } from '../../src/store/cartStore'
 
 interface SessionData {
@@ -24,8 +26,16 @@ function MenuPage() {
   const [loading, setLoading] = useState(true)
   const [loadingProducts, setLoadingProducts] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
 
   const setTableNumber = useCartStore(state => state.setTableNumber)
+  const setOrderId = useCartStore(state => state.setOrderId)
+  const orderId = useCartStore(state => state.orderId)
+
+  const showToast = (message: string, type: ToastType) => {
+    setToast({ message, type })
+  }
 
   useEffect(() => {
     const init = async () => {
@@ -40,6 +50,10 @@ function MenuPage() {
 
         // Set table number in cart store
         setTableNumber(parseInt(tableNumber))
+
+        // Get or create order for this table
+        const order = await getOrCreateOrderForTable(parseInt(tableNumber))
+        setOrderId(order.id)
 
         // Load categories
         const categoriesData = await getAllCategories()
@@ -108,13 +122,46 @@ function MenuPage() {
     )
   }
 
-  const handleCheckout = () => {
-    // TODO: Implement checkout logic to confirm order
-    alert('Checkout functionality will be implemented in next phase')
+  const handleCheckout = async () => {
+    if (!orderId) {
+      showToast('No order found. Please add items to your cart first.', 'warning')
+      return
+    }
+
+    try {
+      setSubmitting(true)
+      await confirmOrder(orderId)
+
+      showToast(`Order confirmed! Your order has been sent to the kitchen.`, 'success')
+
+      // Clear cart after successful confirmation
+      useCartStore.getState().clearCart()
+      setIsCartOpen(false)
+
+      // Create new order for future items
+      setTimeout(async () => {
+        const newOrder = await getOrCreateOrderForTable(parseInt(tableNumber!))
+        setOrderId(newOrder.id)
+      }, 1000)
+    } catch (error) {
+      console.error('Error confirming order:', error)
+      showToast('Failed to confirm order. Please try again.', 'error')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
     <>
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
         <header style={{ marginBottom: '24px' }}>
           <h1>Table {tableNumber}</h1>
@@ -158,6 +205,7 @@ function MenuPage() {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         onCheckout={handleCheckout}
+        submitting={submitting}
       />
     </>
   )

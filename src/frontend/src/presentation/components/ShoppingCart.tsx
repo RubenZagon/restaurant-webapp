@@ -4,9 +4,10 @@ interface ShoppingCartProps {
   isOpen: boolean
   onClose: () => void
   onCheckout: () => void
+  submitting?: boolean
 }
 
-export function ShoppingCart({ isOpen, onClose, onCheckout }: ShoppingCartProps) {
+export function ShoppingCart({ isOpen, onClose, onCheckout, submitting = false }: ShoppingCartProps) {
   const items = useCartStore(state => state.items)
   const updateQuantity = useCartStore(state => state.updateQuantity)
   const removeItem = useCartStore(state => state.removeItem)
@@ -182,20 +183,22 @@ export function ShoppingCart({ isOpen, onClose, onCheckout }: ShoppingCartProps)
 
           <button
             onClick={onCheckout}
+            disabled={submitting}
             style={{
               width: '100%',
               padding: '15px',
-              backgroundColor: '#27ae60',
+              backgroundColor: submitting ? '#95a5a6' : '#27ae60',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
               fontSize: '18px',
               fontWeight: 'bold',
-              cursor: 'pointer',
-              marginBottom: '10px'
+              cursor: submitting ? 'not-allowed' : 'pointer',
+              marginBottom: '10px',
+              opacity: submitting ? 0.7 : 1
             }}
           >
-            Confirm Order
+            {submitting ? 'Confirming...' : 'Confirm Order'}
           </button>
 
           <button

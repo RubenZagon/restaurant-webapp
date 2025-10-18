@@ -30,6 +30,7 @@ builder.Services.AddScoped<GetAllCategoriesUseCase>();
 builder.Services.AddScoped<GetProductsByCategoryUseCase>();
 builder.Services.AddScoped<GetOrCreateOrderForTableUseCase>();
 builder.Services.AddScoped<AddProductToOrderUseCase>();
+builder.Services.AddScoped<ConfirmOrderUseCase>();
 
 // CORS configuration
 builder.Services.AddCors(options =>

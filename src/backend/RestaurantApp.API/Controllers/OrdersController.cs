@@ -11,15 +11,18 @@ public class OrdersController : ControllerBase
     private readonly ILogger<OrdersController> _logger;
     private readonly GetOrCreateOrderForTableUseCase _getOrCreateOrderUseCase;
     private readonly AddProductToOrderUseCase _addProductUseCase;
+    private readonly ConfirmOrderUseCase _confirmOrderUseCase;
 
     public OrdersController(
         ILogger<OrdersController> logger,
         GetOrCreateOrderForTableUseCase getOrCreateOrderUseCase,
-        AddProductToOrderUseCase addProductUseCase)
+        AddProductToOrderUseCase addProductUseCase,
+        ConfirmOrderUseCase confirmOrderUseCase)
     {
         _logger = logger;
         _getOrCreateOrderUseCase = getOrCreateOrderUseCase;
         _addProductUseCase = addProductUseCase;
+        _confirmOrderUseCase = confirmOrderUseCase;
     }
 
     [HttpGet("table/{tableNumber}")]
@@ -51,6 +54,22 @@ public class OrdersController : ControllerBase
         if (!result.IsSuccess)
         {
             _logger.LogWarning("Error adding product to order: {Error}", result.Error);
+            return BadRequest(new { error = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("{orderId}/confirm")]
+    public async Task<IActionResult> ConfirmOrder(Guid orderId)
+    {
+        _logger.LogInformation("Confirming order {OrderId}", orderId);
+
+        var result = await _confirmOrderUseCase.Execute(orderId);
+
+        if (!result.IsSuccess)
+        {
+            _logger.LogWarning("Error confirming order {OrderId}: {Error}", orderId, result.Error);
             return BadRequest(new { error = result.Error });
         }
 
