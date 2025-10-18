@@ -3,10 +3,12 @@ import { useParams } from 'react-router-dom'
 import { startTableSession } from '@infrastructure/api/tableApi'
 import { getAllCategories, getProductsByCategory, Category, Product } from '@infrastructure/api/productsApi'
 import { getOrCreateOrderForTable, confirmOrder } from '@infrastructure/api/ordersApi'
+import { processPayment } from '@infrastructure/api/paymentsApi'
 import CategoryTabs from '../components/CategoryTabs'
 import ProductCard from '../components/ProductCard'
 import { CartIcon } from '../../src/presentation/components/CartIcon'
 import { ShoppingCart } from '../../src/presentation/components/ShoppingCart'
+import { PaymentModal } from '../../src/presentation/components/PaymentModal'
 import { Toast, ToastType } from '../../src/presentation/components/Toast'
 import { useCartStore } from '../../src/store/cartStore'
 import { useOrderNotifications } from '../../src/hooks/useOrderNotifications'
@@ -27,12 +29,17 @@ function MenuPage() {
   const [loading, setLoading] = useState(true)
   const [loadingProducts, setLoadingProducts] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [processingPayment, setProcessingPayment] = useState(false)
+  const [orderConfirmed, setOrderConfirmed] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
 
   const setTableNumber = useCartStore(state => state.setTableNumber)
   const setOrderId = useCartStore(state => state.setOrderId)
   const orderId = useCartStore(state => state.orderId)
+  const getTotalAmount = useCartStore(state => state.getTotalAmount)
+  const items = useCartStore(state => state.items)
 
   // SignalR real-time notifications
   const { isConnected, lastNotification, error: signalRError } = useOrderNotifications(
@@ -161,21 +168,51 @@ function MenuPage() {
       await confirmOrder(orderId)
 
       showToast(`Order confirmed! Your order has been sent to the kitchen.`, 'success')
-
-      // Clear cart after successful confirmation
-      useCartStore.getState().clearCart()
-      setIsCartOpen(false)
-
-      // Create new order for future items
-      setTimeout(async () => {
-        const newOrder = await getOrCreateOrderForTable(parseInt(tableNumber!))
-        setOrderId(newOrder.id)
-      }, 1000)
+      setOrderConfirmed(true)
     } catch (error) {
       console.error('Error confirming order:', error)
       showToast('Failed to confirm order. Please try again.', 'error')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleOpenPayment = () => {
+    setIsCartOpen(false)
+    setIsPaymentModalOpen(true)
+  }
+
+  const handlePayment = async (paymentMethod: string) => {
+    if (!orderId) {
+      showToast('No order found.', 'error')
+      return
+    }
+
+    try {
+      setProcessingPayment(true)
+      const result = await processPayment(orderId, paymentMethod)
+
+      if (result.success) {
+        showToast('Payment successful! Thank you for your order.', 'success')
+        setIsPaymentModalOpen(false)
+
+        // Clear cart and reset state
+        useCartStore.getState().clearCart()
+        setOrderConfirmed(false)
+
+        // Create new order for future items
+        setTimeout(async () => {
+          const newOrder = await getOrCreateOrderForTable(parseInt(tableNumber!))
+          setOrderId(newOrder.id)
+        }, 1000)
+      } else {
+        showToast(`Payment failed: ${result.error}`, 'error')
+      }
+    } catch (error) {
+      console.error('Error processing payment:', error)
+      showToast('Payment processing failed. Please try again.', 'error')
+    } finally {
+      setProcessingPayment(false)
     }
   }
 
@@ -256,7 +293,19 @@ function MenuPage() {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         onCheckout={handleCheckout}
+        onPayment={handleOpenPayment}
         submitting={submitting}
+        orderConfirmed={orderConfirmed}
+      />
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onConfirmPayment={handlePayment}
+        totalAmount={getTotalAmount()}
+        currency={items[0]?.currency || 'EUR'}
+        isProcessing={processingPayment}
       />
     </>
   )

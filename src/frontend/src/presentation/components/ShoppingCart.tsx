@@ -4,10 +4,19 @@ interface ShoppingCartProps {
   isOpen: boolean
   onClose: () => void
   onCheckout: () => void
+  onPayment?: () => void
   submitting?: boolean
+  orderConfirmed?: boolean
 }
 
-export function ShoppingCart({ isOpen, onClose, onCheckout, submitting = false }: ShoppingCartProps) {
+export function ShoppingCart({
+  isOpen,
+  onClose,
+  onCheckout,
+  onPayment,
+  submitting = false,
+  orderConfirmed = false
+}: ShoppingCartProps) {
   const items = useCartStore(state => state.items)
   const updateQuantity = useCartStore(state => state.updateQuantity)
   const removeItem = useCartStore(state => state.removeItem)
@@ -181,41 +190,95 @@ export function ShoppingCart({ isOpen, onClose, onCheckout, submitting = false }
             <span>{total.toFixed(2)} {currency}</span>
           </div>
 
-          <button
-            onClick={onCheckout}
-            disabled={submitting}
-            style={{
-              width: '100%',
-              padding: '15px',
-              backgroundColor: submitting ? '#95a5a6' : '#27ae60',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              cursor: submitting ? 'not-allowed' : 'pointer',
-              marginBottom: '10px',
-              opacity: submitting ? 0.7 : 1
-            }}
-          >
-            {submitting ? 'Confirming...' : 'Confirm Order'}
-          </button>
+          {!orderConfirmed ? (
+            <>
+              <button
+                onClick={onCheckout}
+                disabled={submitting}
+                style={{
+                  width: '100%',
+                  padding: '15px',
+                  backgroundColor: submitting ? '#95a5a6' : '#27ae60',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  cursor: submitting ? 'not-allowed' : 'pointer',
+                  marginBottom: '10px',
+                  opacity: submitting ? 0.7 : 1
+                }}
+              >
+                {submitting ? 'Confirming...' : 'Confirm Order'}
+              </button>
 
-          <button
-            onClick={clearCart}
-            style={{
-              width: '100%',
-              padding: '12px',
-              backgroundColor: 'transparent',
-              color: '#e74c3c',
-              border: '1px solid #e74c3c',
-              borderRadius: '8px',
-              fontSize: '14px',
-              cursor: 'pointer'
-            }}
-          >
-            Clear Cart
-          </button>
+              <button
+                onClick={clearCart}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  backgroundColor: 'transparent',
+                  color: '#e74c3c',
+                  border: '1px solid #e74c3c',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
+                Clear Cart
+              </button>
+            </>
+          ) : (
+            <>
+              <div style={{
+                padding: '12px',
+                backgroundColor: '#d4edda',
+                borderRadius: '6px',
+                marginBottom: '10px',
+                color: '#155724',
+                textAlign: 'center',
+                fontWeight: '500'
+              }}>
+                ✓ Order confirmed! Ready to pay.
+              </div>
+
+              {onPayment && (
+                <button
+                  onClick={onPayment}
+                  style={{
+                    width: '100%',
+                    padding: '15px',
+                    backgroundColor: '#007bff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    marginBottom: '10px'
+                  }}
+                >
+                  Proceed to Payment
+                </button>
+              )}
+
+              <button
+                onClick={onClose}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  backgroundColor: 'transparent',
+                  color: '#6c757d',
+                  border: '1px solid #6c757d',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
