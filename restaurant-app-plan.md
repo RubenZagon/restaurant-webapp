@@ -182,7 +182,7 @@ Desarrollar una aplicación web progresiva (PWA) que permita a los clientes de u
 
 ---
 
-## 🛒 FASE 3: Sistema de Pedidos - 🟡 EN PROGRESO (80% COMPLETADA)
+## 🛒 FASE 3: Sistema de Pedidos - ✅ COMPLETADA (95%)
 
 ### 3.1 Bounded Context: Gestión de Pedidos ✅
 
@@ -310,13 +310,17 @@ describe('Flujo completo de pedido', () => {
 });
 ```
 
+**Integración Frontend-Backend:** ✅ COMPLETADA
+- ✅ `ConfirmOrderUseCase`: Confirma pedido y actualiza estado
+- ✅ `POST /api/orders/{orderId}/confirm`: Endpoint implementado
+- ✅ `ordersApi.ts`: Cliente Axios con confirmación de pedidos
+- ✅ `Toast`: Componente de notificaciones para feedback
+- ✅ `MenuPage`: Integración completa con manejo de checkout
+
 ### 📋 Tareas Pendientes Fase 3
 
-- [ ] **Conectar frontend con backend**: Sincronizar carrito con API de pedidos
-- [ ] **Endpoint de confirmación**: `POST /api/orders/{orderId}/confirm`
-- [ ] **Tests E2E**: Flujo completo de agregar productos y confirmar pedido
+- [ ] **Tests E2E**: Flujo completo de agregar productos y confirmar pedido (Playwright + Testcontainers)
 - [ ] **Persistencia real**: Migrar de InMemory a PostgreSQL
-- [ ] **Manejo de errores**: Toast notifications para feedback al usuario
 
 ---
 
@@ -396,9 +400,279 @@ describe('Flujo completo de pedido', () => {
 
 ---
 
-## 💳 FASE 4: Sistema de Pagos (2 semanas) - ⏳ PENDIENTE
+## 🔔 FASE 4: Notificaciones en Tiempo Real - ✅ COMPLETADA
 
-### 4.1 Integración con Pasarela de Pago (Mock)
+### 4.1 Implementación de SignalR ✅
+
+**Backend - Domain Events Pattern:** ✅ IMPLEMENTADO
+```csharp
+// ✅ Base Interface
+public interface IDomainEvent
+{
+    DateTime OccurredOn { get; }
+}
+
+// ✅ Order Events
+public record OrderConfirmedEvent : IDomainEvent
+{
+    public OrderId OrderId { get; }
+    public int TableNumber { get; }
+    public DateTime OccurredOn { get; }
+}
+
+public record OrderStatusChangedEvent : IDomainEvent
+{
+    public OrderId OrderId { get; }
+    public int TableNumber { get; }
+    public OrderStatus OldStatus { get; }
+    public OrderStatus NewStatus { get; }
+    public DateTime OccurredOn { get; }
+}
+
+// ✅ Entity Base Class
+public abstract class Entity
+{
+    private readonly List<IDomainEvent> _domainEvents = new();
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+
+    protected void RaiseDomainEvent(IDomainEvent domainEvent)
+    {
+        _domainEvents.Add(domainEvent);
+    }
+
+    public void ClearDomainEvents()
+    {
+        _domainEvents.Clear();
+    }
+}
+```
+
+**SignalR Hub:** ✅ IMPLEMENTADO
+```csharp
+// ✅ RestaurantApp.Infrastructure/Services/OrderNotificationHub.cs
+public class OrderNotificationHub : Hub
+{
+    // Subscribe to table-specific notifications
+    public async Task SubscribeToTable(int tableNumber)
+    {
+        var groupName = $"table_{tableNumber}";
+        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+    }
+
+    // Subscribe to kitchen notifications
+    public async Task SubscribeToKitchen()
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, "kitchen");
+    }
+
+    // Unsubscribe methods
+    public async Task UnsubscribeFromTable(int tableNumber)
+    {
+        var groupName = $"table_{tableNumber}";
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
+    }
+
+    public async Task UnsubscribeFromKitchen()
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, "kitchen");
+    }
+}
+```
+
+**Notification Service:** ✅ IMPLEMENTADO
+```csharp
+// ✅ RestaurantApp.Application/Services/IOrderNotificationService.cs
+public interface IOrderNotificationService
+{
+    Task NotifyOrderConfirmed(OrderConfirmedEvent orderEvent);
+    Task NotifyOrderStatusChanged(OrderStatusChangedEvent statusEvent);
+}
+
+// ✅ RestaurantApp.Infrastructure/Services/OrderNotificationService.cs
+public class OrderNotificationService : IOrderNotificationService
+{
+    private readonly IHubContext<OrderNotificationHub> _hubContext;
+    private readonly ILogger<OrderNotificationService> _logger;
+
+    public async Task NotifyOrderConfirmed(OrderConfirmedEvent orderEvent)
+    {
+        var notification = new
+        {
+            type = "OrderConfirmed",
+            orderId = orderEvent.OrderId.Value.ToString(),
+            tableNumber = orderEvent.TableNumber,
+            occurredAt = orderEvent.OccurredOn
+        };
+
+        // Notify customer at the table
+        var tableGroup = $"table_{orderEvent.TableNumber}";
+        await _hubContext.Clients.Group(tableGroup).SendAsync("OrderConfirmed", notification);
+
+        // Notify kitchen staff
+        await _hubContext.Clients.Group("kitchen").SendAsync("NewOrder", notification);
+    }
+
+    public async Task NotifyOrderStatusChanged(OrderStatusChangedEvent statusEvent)
+    {
+        var notification = new
+        {
+            type = "OrderStatusChanged",
+            orderId = statusEvent.OrderId.Value.ToString(),
+            tableNumber = statusEvent.TableNumber,
+            oldStatus = statusEvent.OldStatus.ToString(),
+            newStatus = statusEvent.NewStatus.ToString(),
+            occurredAt = statusEvent.OccurredOn
+        };
+
+        // Notify customer
+        var tableGroup = $"table_{statusEvent.TableNumber}";
+        await _hubContext.Clients.Group(tableGroup).SendAsync("OrderStatusChanged", notification);
+
+        // Notify kitchen
+        await _hubContext.Clients.Group("kitchen").SendAsync("OrderStatusChanged", notification);
+    }
+}
+```
+
+**Event Dispatching in Use Cases:** ✅ IMPLEMENTADO
+```csharp
+// ✅ ConfirmOrderUseCase - Dispatches domain events
+public class ConfirmOrderUseCase
+{
+    private readonly IOrderRepository _orderRepository;
+    private readonly IOrderNotificationService _notificationService;
+
+    public async Task<Result<OrderDto>> Execute(Guid orderId)
+    {
+        var order = await _orderRepository.GetById(new OrderId(orderId));
+        if (order == null)
+            return Result<OrderDto>.Failure("Order not found");
+
+        order.Confirm();
+        await _orderRepository.Save(order);
+
+        // Dispatch domain events
+        await DispatchDomainEvents(order);
+
+        var dto = MapToDto(order);
+        return Result<OrderDto>.Success(dto);
+    }
+
+    private async Task DispatchDomainEvents(Order order)
+    {
+        foreach (var domainEvent in order.DomainEvents)
+        {
+            switch (domainEvent)
+            {
+                case OrderConfirmedEvent confirmedEvent:
+                    await _notificationService.NotifyOrderConfirmed(confirmedEvent);
+                    break;
+                case OrderStatusChangedEvent statusChangedEvent:
+                    await _notificationService.NotifyOrderStatusChanged(statusChangedEvent);
+                    break;
+            }
+        }
+        order.ClearDomainEvents();
+    }
+}
+```
+
+**Program.cs Configuration:** ✅ IMPLEMENTADO
+```csharp
+// Register SignalR services
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IOrderNotificationService, OrderNotificationService>();
+
+// Map SignalR hub endpoint
+app.MapHub<OrderNotificationHub>("/hubs/order-notifications");
+```
+
+### 4.2 Frontend - React Integration ✅
+
+**Custom Hook for SignalR:** ✅ IMPLEMENTADO
+```typescript
+// ✅ /src/hooks/useOrderNotifications.ts
+export function useOrderNotifications(tableNumber: number): UseOrderNotificationsResult {
+  const [isConnected, setIsConnected] = useState(false)
+  const [lastNotification, setLastNotification] = useState<OrderNotification | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const connectionRef = useRef<signalR.HubConnection | null>(null)
+
+  useEffect(() => {
+    // Create SignalR connection
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(`${API_BASE_URL}/hubs/order-notifications`, {
+        skipNegotiation: false,
+        transport: signalR.HttpTransportType.WebSockets |
+                   signalR.HttpTransportType.ServerSentEvents |
+                   signalR.HttpTransportType.LongPolling
+      })
+      .withAutomaticReconnect()
+      .configureLogging(signalR.LogLevel.Information)
+      .build()
+
+    // Set up event handlers
+    connection.on('OrderConfirmed', (notification: OrderNotification) => {
+      setLastNotification(notification)
+    })
+
+    connection.on('OrderStatusChanged', (notification: OrderStatusNotification) => {
+      setLastNotification(notification)
+    })
+
+    connection.on('NewOrder', (notification: OrderNotification) => {
+      setLastNotification(notification)
+    })
+
+    // Start connection and subscribe to table
+    const startConnection = async () => {
+      try {
+        await connection.start()
+        setIsConnected(true)
+        await connection.invoke('SubscribeToTable', tableNumber)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Connection failed')
+        setIsConnected(false)
+      }
+    }
+
+    startConnection()
+
+    // Cleanup on unmount
+    return () => {
+      connection.invoke('UnsubscribeFromTable', tableNumber)
+        .then(() => connection.stop())
+    }
+  }, [tableNumber])
+
+  return { isConnected, lastNotification, error }
+}
+```
+
+**MenuPage Integration:** ✅ IMPLEMENTADO
+- ✅ Real-time connection status indicator (Live/Disconnected)
+- ✅ Automatic reconnection handling
+- ✅ Toast notifications for order status updates
+- ✅ Visual feedback with green/red connection indicator
+
+**Dependencies Added:**
+- ✅ Backend: `Microsoft.AspNetCore.SignalR` (built-in .NET 8)
+- ✅ Frontend: `@microsoft/signalr@^9.0.6`
+
+### 4.3 Features Implemented ✅
+
+1. ✅ **Real-time Order Confirmation**: Customers receive instant notification when order is confirmed
+2. ✅ **Kitchen Notifications**: Kitchen staff receives new order notifications
+3. ✅ **Status Updates**: Real-time order status changes (Confirmed → Preparing → Ready → Delivered)
+4. ✅ **Connection Management**: Automatic reconnection on network failures
+5. ✅ **Group-based Broadcasting**: Table-specific and kitchen group subscriptions
+6. ✅ **Domain Events Pattern**: Clean separation between domain logic and infrastructure
+
+---
+
+## 💳 FASE 5: Sistema de Pagos (2 semanas) - ⏳ PENDIENTE
+
+### 5.1 Integración con Pasarela de Pago (Mock)
 
 **Puerto (Hexagonal Architecture):**
 ```csharp
@@ -415,7 +689,7 @@ public class MockPaymentGateway : IPaymentGateway
 }
 ```
 
-### 4.2 Flujo de Pago
+### 5.2 Flujo de Pago
 
 1. Cliente solicita pagar
 2. Sistema calcula total con impuestos
@@ -431,38 +705,39 @@ public class MockPaymentGateway : IPaymentGateway
 
 ---
 
-## 👨‍🍳 FASE 5: Panel de Cocina y Camareros (2 semanas)
+## 👨‍🍳 FASE 6: Panel de Cocina y Camareros (2 semanas) - ⏳ PENDIENTE
 
-### 5.1 Dashboard en Tiempo Real
+### 6.1 Dashboard en Tiempo Real
 
-**WebSockets con SignalR:**
+**WebSockets con SignalR:** ⚠️ **Base ya implementada en Fase 4**
 ```csharp
-public class KitchenHub : Hub
+// ✅ OrderNotificationHub ya tiene subscripción a grupo "kitchen"
+public class OrderNotificationHub : Hub
 {
-    public async Task NotifyNewOrder(Order order)
+    public async Task SubscribeToKitchen()
     {
-        await Clients.Group("kitchen").SendAsync("NewOrder", order);
+        await Groups.AddToGroupAsync(Context.ConnectionId, "kitchen");
     }
 }
 ```
 
-**Interfaz Cocina:**
+**Interfaz Cocina (Pendiente):**
 - Vista kanban de pedidos (Pendiente → Preparando → Listo)
 - Tiempo estimado por pedido
 - Alertas de modificaciones
 - Estadísticas del servicio
 
-### 5.2 Sistema de Notificaciones
+### 6.2 Sistema de Notificaciones
 
 - Push notifications cuando pedido está listo
 - SMS/Email de confirmación (opcional)
-- WebSocket para actualizaciones en tiempo real
+- ✅ WebSocket para actualizaciones en tiempo real (implementado en Fase 4)
 
 ---
 
-## 🚀 FASE 6: DevOps y Despliegue (1 semana)
+## 🚀 FASE 7: DevOps y Despliegue (1 semana) - ⏳ PENDIENTE
 
-### 6.1 Dockerización
+### 7.1 Dockerización
 
 ```dockerfile
 # Backend
@@ -477,7 +752,7 @@ COPY --from=build /app/out .
 ENTRYPOINT ["dotnet", "RestaurantApp.API.dll"]
 ```
 
-### 6.2 Kubernetes en Digital Ocean
+### 7.2 Kubernetes en Digital Ocean
 
 ```yaml
 apiVersion: apps/v1
@@ -498,7 +773,7 @@ spec:
         - containerPort: 80
 ```
 
-### 6.3 GitHub Actions CI/CD
+### 7.3 GitHub Actions CI/CD
 
 ```yaml
 name: Deploy to Production
@@ -527,16 +802,16 @@ jobs:
 
 ---
 
-## 📊 FASE 7: Optimización y Monitoreo (1 semana)
+## 📊 FASE 8: Optimización y Monitoreo (1 semana) - ⏳ PENDIENTE
 
-### 7.1 Observabilidad
+### 8.1 Observabilidad
 
 - **Logs**: Serilog + ELK Stack
 - **Métricas**: Prometheus + Grafana
 - **Tracing**: OpenTelemetry
 - **Alertas**: PagerDuty integration
 
-### 7.2 Optimizaciones de Rendimiento
+### 8.2 Optimizaciones de Rendimiento
 
 - Implementar caché con Redis
 - CDN para assets estáticos
@@ -544,7 +819,7 @@ jobs:
 - Paginación en listados
 - Índices de base de datos
 
-### 7.3 Tests de Carga
+### 8.3 Tests de Carga
 
 ```bash
 # K6 para pruebas de carga
@@ -553,9 +828,9 @@ k6 run --vus 100 --duration 30s load-test.js
 
 ---
 
-## 🔒 FASE 8: Seguridad y Compliance (1 semana)
+## 🔒 FASE 9: Seguridad y Compliance (1 semana) - ⏳ PENDIENTE
 
-### 8.1 Seguridad
+### 9.1 Seguridad
 
 - Rate limiting por IP
 - CORS configuración
@@ -563,7 +838,7 @@ k6 run --vus 100 --duration 30s load-test.js
 - Autenticación JWT para staff
 - Encriptación de datos sensibles
 
-### 8.2 GDPR Compliance
+### 9.2 GDPR Compliance
 
 - Política de privacidad
 - Consentimiento de cookies
@@ -572,16 +847,16 @@ k6 run --vus 100 --duration 30s load-test.js
 
 ---
 
-## 📈 FASE 9: Analytics y Mejoras (Continuo)
+## 📈 FASE 10: Analytics y Mejoras (Continuo) - ⏳ PENDIENTE
 
-### 9.1 Analytics de Negocio
+### 10.1 Analytics de Negocio
 
 - Productos más vendidos
 - Tiempos de preparación
 - Horas pico
 - Satisfacción del cliente
 
-### 9.2 A/B Testing
+### 10.2 A/B Testing
 
 - Diferentes layouts de menú
 - Proceso de checkout
@@ -612,20 +887,22 @@ k6 run --vus 100 --duration 30s load-test.js
 
 ---
 
-## 📅 Cronograma Estimado (Actualizado)
+## 📅 Cronograma Estimado (Actualizado: 2025-10-18)
 
 | Fase | Estado | Duración Real | Entregable Principal |
 |------|--------|---------------|---------------------|
 | 1. Fundación | ✅ **COMPLETADA** | 1 semana | Arquitectura base + Docker |
 | 2. Core Dominio | ✅ **COMPLETADA** | 1 semana | Gestión mesas y menú |
-| 3. Pedidos | 🟡 **80% COMPLETADA** | 1.5 semanas | Backend completo + Frontend UI |
-| 4. Pagos | ⏳ **PENDIENTE** | 2 semanas | Integración pasarela (mock) |
-| 5. Panel Cocina | ⏳ **PENDIENTE** | 2 semanas | Dashboard tiempo real |
-| 6. DevOps | ⏳ **PENDIENTE** | 1 semana | Despliegue producción |
-| 7. Optimización | ⏳ **PENDIENTE** | 1 semana | Monitoreo y métricas |
-| 8. Seguridad | 🟡 **PARCIAL** | - | Dependencias actualizadas |
-| **PROGRESO ACTUAL** | **~50%** | **3.5 semanas** | **MVP Funcional (local)** |
-| **ESTIMADO RESTANTE** | - | **7-8 semanas** | **MVP Completo** |
+| 3. Pedidos | ✅ **95% COMPLETADA** | 1.5 semanas | Backend + Frontend + API integration |
+| 4. Notificaciones Real-time | ✅ **COMPLETADA** | 1 semana | SignalR + Domain Events |
+| 5. Pagos | ⏳ **PENDIENTE** | 2 semanas | Integración pasarela (mock) |
+| 6. Panel Cocina | ⏳ **PENDIENTE** | 1.5 semanas | Dashboard tiempo real |
+| 7. DevOps | ⏳ **PENDIENTE** | 1 semana | Despliegue producción |
+| 8. Optimización | ⏳ **PENDIENTE** | 1 semana | Monitoreo y métricas |
+| 9. Seguridad | 🟡 **PARCIAL** | - | Dependencias actualizadas |
+| 10. Analytics | ⏳ **PENDIENTE** | Continuo | Analytics y mejoras |
+| **PROGRESO ACTUAL** | **~60%** | **4.5 semanas** | **MVP Funcional con real-time** |
+| **ESTIMADO RESTANTE** | - | **6-7 semanas** | **MVP Completo** |
 
 ---
 
