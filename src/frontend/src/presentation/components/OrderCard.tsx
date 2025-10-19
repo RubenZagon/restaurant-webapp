@@ -66,7 +66,8 @@ export function OrderCard({ order, onStatusUpdate, updating = false }: OrderCard
     const now = new Date()
     const diffMs = now.getTime() - created.getTime()
     const diffMins = Math.floor(diffMs / 60000)
-    return diffMins + ' min' + (diffMins !== 1 ? 's' : '')
+    const minuteLabel = diffMins !== 1 ? t('kitchen.minutesPlural') : t('kitchen.minutes')
+    return `${diffMins} ${minuteLabel} ${t('kitchen.timeAgo')}`
   }
 
   return (
@@ -122,7 +123,7 @@ export function OrderCard({ order, onStatusUpdate, updating = false }: OrderCard
             color: colors.text.secondary,
             fontWeight: '500'
           }}>
-            {getElapsedTime()} ago
+            ⏱️ {getElapsedTime()}
           </p>
         </div>
       </div>

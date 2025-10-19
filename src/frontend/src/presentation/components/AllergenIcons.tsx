@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 interface AllergenIconProps {
   allergen: string
   size?: number
@@ -154,41 +156,60 @@ interface AllergenListProps {
 }
 
 export function AllergenList({ allergens, size = 24, showLabels = false }: AllergenListProps) {
+  const { t } = useTranslation()
+
   if (!allergens || allergens.length === 0) return null
+
+  const translateAllergen = (allergen: string) => {
+    const key = `allergens.${allergen.toLowerCase().replace(/ /g, ' ')}`
+    const translation = t(key)
+    return translation === key ? allergen : translation
+  }
 
   return (
     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-      {allergens.map((allergen) => (
-        <div
-          key={allergen}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            padding: showLabels ? '4px 8px' : '4px',
-            backgroundColor: '#FFF9E6',
-            borderRadius: '6px',
-            border: '1px solid #E8D5B7'
-          }}
-          title={allergen}
-        >
-          <AllergenIcon allergen={allergen} size={size} />
-          {showLabels && (
-            <span style={{ fontSize: '12px', color: '#8B4513', fontWeight: '500' }}>
-              {allergen}
-            </span>
-          )}
-        </div>
-      ))}
+      {allergens.map((allergen) => {
+        const translatedAllergen = translateAllergen(allergen)
+        return (
+          <div
+            key={allergen}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: showLabels ? '4px 8px' : '4px',
+              backgroundColor: '#FFF9E6',
+              borderRadius: '6px',
+              border: '1px solid #E8D5B7'
+            }}
+            title={translatedAllergen}
+          >
+            <AllergenIcon allergen={allergen} size={size} />
+            {showLabels && (
+              <span style={{ fontSize: '12px', color: '#8B4513', fontWeight: '500' }}>
+                {translatedAllergen}
+              </span>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
 
 export function AllergenLegend() {
+  const { t } = useTranslation()
+
   const commonAllergens = [
     'Gluten', 'Dairy', 'Eggs', 'Fish', 'Shellfish', 'Nuts',
     'Peanuts', 'Soy', 'Celery', 'Mustard', 'Sesame', 'Sulfites'
   ]
+
+  const translateAllergen = (allergen: string) => {
+    const key = `allergens.${allergen.toLowerCase()}`
+    const translation = t(key)
+    return translation === key ? allergen : translation
+  }
 
   return (
     <div style={{
@@ -196,7 +217,8 @@ export function AllergenLegend() {
       border: '2px solid #D4A574',
       borderRadius: '12px',
       padding: '20px',
-      marginTop: '20px'
+      marginTop: '20px',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.06)'
     }}>
       <h3 style={{
         margin: '0 0 16px 0',
@@ -204,7 +226,7 @@ export function AllergenLegend() {
         fontSize: '18px',
         fontWeight: '600'
       }}>
-        Allergen Legend
+        {t('allergens.legend')}
       </h3>
       <div style={{
         display: 'grid',
@@ -221,12 +243,15 @@ export function AllergenLegend() {
               padding: '8px',
               backgroundColor: '#FFF',
               borderRadius: '6px',
-              border: '1px solid #E8D5B7'
+              border: '1px solid #E8D5B7',
+              transition: 'all 0.2s ease',
+              cursor: 'help'
             }}
+            title={translateAllergen(allergen)}
           >
             <AllergenIcon allergen={allergen} size={20} />
             <span style={{ fontSize: '13px', color: '#5D4037', fontWeight: '500' }}>
-              {allergen}
+              {translateAllergen(allergen)}
             </span>
           </div>
         ))}
