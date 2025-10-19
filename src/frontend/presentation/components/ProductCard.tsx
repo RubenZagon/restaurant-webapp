@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Product } from '@infrastructure/api/productsApi'
 import { useCartStore } from '../../src/store/cartStore'
+import { addProductToOrder } from '@infrastructure/api/ordersApi'
 
 interface ProductCardProps {
   product: Product
@@ -7,15 +9,38 @@ interface ProductCardProps {
 
 function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore(state => state.addItem)
+  const orderId = useCartStore(state => state.orderId)
+  const [adding, setAdding] = useState(false)
 
-  const handleAddToCart = () => {
-    addItem({
-      productId: product.id,
-      name: product.name,
-      description: product.description || '',
-      price: product.price,
-      currency: product.currency
-    }, 1)
+  const handleAddToCart = async () => {
+    if (!orderId) {
+      console.error('No order ID available')
+      return
+    }
+
+    try {
+      setAdding(true)
+
+      // Add product to backend order
+      await addProductToOrder(orderId, {
+        productId: product.id,
+        quantity: 1
+      })
+
+      // Add to local cart state for UI
+      addItem({
+        productId: product.id,
+        name: product.name,
+        description: product.description || '',
+        price: product.price,
+        currency: product.currency
+      }, 1)
+    } catch (error) {
+      console.error('Error adding product to order:', error)
+      alert('Failed to add product to cart. Please try again.')
+    } finally {
+      setAdding(false)
+    }
   }
 
   return (
@@ -52,27 +77,33 @@ function ProductCard({ product }: ProductCardProps) {
       </div>
       <button
         onClick={handleAddToCart}
+        disabled={adding}
         style={{
           width: '100%',
           padding: '12px',
           marginTop: '12px',
-          backgroundColor: '#27ae60',
+          backgroundColor: adding ? '#95a5a6' : '#27ae60',
           color: 'white',
           border: 'none',
           borderRadius: '6px',
           fontSize: '16px',
           fontWeight: 'bold',
-          cursor: 'pointer',
-          transition: 'background-color 0.2s'
+          cursor: adding ? 'not-allowed' : 'pointer',
+          transition: 'background-color 0.2s',
+          opacity: adding ? 0.7 : 1
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#229954'
+          if (!adding) {
+            e.currentTarget.style.backgroundColor = '#229954'
+          }
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = '#27ae60'
+          if (!adding) {
+            e.currentTarget.style.backgroundColor = '#27ae60'
+          }
         }}
       >
-        Add to Cart
+        {adding ? 'Adding...' : 'Add to Cart'}
       </button>
     </div>
   )
