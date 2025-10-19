@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Order } from '@infrastructure/api/ordersApi.ts'
 import { colors } from '../../theme/colors'
 
@@ -8,6 +9,8 @@ interface OrderCardProps {
 }
 
 export function OrderCard({ order, onStatusUpdate, updating = false }: OrderCardProps) {
+  const { t } = useTranslation()
+
   const getStatusColor = (status: string): string => {
     switch (status) {
       case 'Confirmed':
@@ -39,11 +42,11 @@ export function OrderCard({ order, onStatusUpdate, updating = false }: OrderCard
   const getNextStatusLabel = (currentStatus: string): string | null => {
     switch (currentStatus) {
       case 'Confirmed':
-        return 'Start Preparing'
+        return t('kitchen.actions.startPreparing')
       case 'Preparing':
-        return 'Mark Ready'
+        return t('kitchen.actions.markReady')
       case 'Ready':
-        return 'Mark Delivered'
+        return t('kitchen.actions.markDelivered')
       default:
         return null
     }
@@ -87,7 +90,7 @@ export function OrderCard({ order, onStatusUpdate, updating = false }: OrderCard
             fontWeight: '700',
             color: colors.text.primary
           }}>
-            Table {order.tableNumber}
+            {t('kitchen.table')} {order.tableNumber}
           </h3>
           <p style={{
             margin: 0,
@@ -111,7 +114,7 @@ export function OrderCard({ order, onStatusUpdate, updating = false }: OrderCard
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}
           >
-            {order.status}
+            {t(`kitchen.orderStatus.${order.status}`)}
           </div>
           <p style={{
             margin: 0,

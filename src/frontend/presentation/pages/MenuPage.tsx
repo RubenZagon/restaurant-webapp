@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { startTableSession } from '@infrastructure/api/tableApi'
 import { getAllCategories, getProductsByCategory, Category, Product } from '@infrastructure/api/productsApi'
 import { getOrCreateOrderForTable, confirmOrder } from '@infrastructure/api/ordersApi'
@@ -11,6 +12,7 @@ import { ShoppingCart } from '../../src/presentation/components/ShoppingCart'
 import { PaymentModal } from '../../src/presentation/components/PaymentModal'
 import { Toast, ToastType } from '../../src/presentation/components/Toast'
 import { AllergenLegend } from '../../src/presentation/components/AllergenIcons'
+import { LanguageSelector } from '../../src/presentation/components/LanguageSelector'
 import { useCartStore } from '@/src/store/cartStore.ts'
 import { useOrderNotifications } from '@/src/hooks/useOrderNotifications.ts'
 import { colors } from '@/src/theme/colors.ts'
@@ -22,6 +24,7 @@ interface SessionData {
 }
 
 function MenuPage() {
+  const { t } = useTranslation()
   const { tableNumber } = useParams<{ tableNumber: string }>()
   const [session, setSession] = useState<SessionData | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
@@ -60,7 +63,7 @@ function MenuPage() {
       if (lastNotification.type === 'OrderStatusChanged') {
         const statusNotification = lastNotification as any
         showToast(
-          `Your order status changed to: ${statusNotification.newStatus}`,
+          t('notifications.orderStatusChanged', { status: statusNotification.newStatus }),
           'info'
         )
       }
@@ -138,7 +141,7 @@ function MenuPage() {
         alignItems: 'center',
         minHeight: '100vh'
       }}>
-        <p>Loading...</p>
+        <p>{t('common.loading')}</p>
       </div>
     )
   }
@@ -153,7 +156,7 @@ function MenuPage() {
         minHeight: '100vh',
         padding: '20px'
       }}>
-        <h2>Error</h2>
+        <h2>{t('common.error')}</h2>
         <p style={{ color: 'red', marginTop: '20px' }}>{error}</p>
       </div>
     )
@@ -161,7 +164,7 @@ function MenuPage() {
 
   const handleCheckout = async () => {
     if (!orderId) {
-      showToast('No order found. Please add items to your cart first.', 'warning')
+      showToast(t('notifications.noOrderFound'), 'warning')
       return
     }
 
@@ -169,11 +172,11 @@ function MenuPage() {
       setSubmitting(true)
       await confirmOrder(orderId)
 
-      showToast(`Order confirmed! Your order has been sent to the kitchen.`, 'success')
+      showToast(t('notifications.orderConfirmedSuccess'), 'success')
       setOrderConfirmed(true)
     } catch (error) {
       console.error('Error confirming order:', error)
-      showToast('Failed to confirm order. Please try again.', 'error')
+      showToast(t('notifications.orderConfirmFailed'), 'error')
     } finally {
       setSubmitting(false)
     }
@@ -186,7 +189,7 @@ function MenuPage() {
 
   const handlePayment = async (paymentMethod: string) => {
     if (!orderId) {
-      showToast('No order found.', 'error')
+      showToast(t('notifications.noOrderFound'), 'error')
       return
     }
 
@@ -195,7 +198,7 @@ function MenuPage() {
       const result = await processPayment(orderId, paymentMethod)
 
       if (result.success) {
-        showToast('Payment successful! Thank you for your order.', 'success')
+        showToast(t('payment.paymentSuccess'), 'success')
         setIsPaymentModalOpen(false)
 
         // Clear cart and reset state
@@ -208,11 +211,11 @@ function MenuPage() {
           setOrderId(newOrder.id)
         }, 1000)
       } else {
-        showToast(`Payment failed: ${result.error}`, 'error')
+        showToast(`${t('payment.paymentFailed')}: ${result.error}`, 'error')
       }
     } catch (error) {
       console.error('Error processing payment:', error)
-      showToast('Payment processing failed. Please try again.', 'error')
+      showToast(t('payment.paymentFailed'), 'error')
     } finally {
       setProcessingPayment(false)
     }
@@ -258,7 +261,7 @@ function MenuPage() {
                 fontSize: '32px',
                 fontWeight: '700'
               }}>
-                Table {tableNumber}
+                {t('menu.table')} {tableNumber}
               </h1>
               {session && (
                 <p style={{
@@ -266,7 +269,7 @@ function MenuPage() {
                   color: colors.text.secondary,
                   fontSize: '0.9em'
                 }}>
-                  Session: {new Date(session.startedAt).toLocaleTimeString()}
+                  {t('menu.session')}: {new Date(session.startedAt).toLocaleTimeString()}
                 </p>
               )}
             </div>
@@ -290,9 +293,10 @@ function MenuPage() {
                 color: isConnected ? colors.orderStatus.ready.text : colors.status.error,
                 fontWeight: '600'
               }}>
-                {isConnected ? 'Live' : 'Disconnected'}
+                {isConnected ? t('menu.live') : t('menu.disconnected')}
               </span>
             </div>
+            <LanguageSelector />
           </div>
         </header>
 
@@ -303,7 +307,7 @@ function MenuPage() {
             fontSize: '28px',
             fontWeight: '600'
           }}>
-            Menu
+            {t('menu.title')}
           </h2>
 
           <CategoryTabs
@@ -319,7 +323,7 @@ function MenuPage() {
               fontSize: '18px',
               padding: '40px 0'
             }}>
-              Loading products...
+              {t('menu.loadingProducts')}
             </p>
           ) : products.length === 0 ? (
             <p style={{
@@ -328,7 +332,7 @@ function MenuPage() {
               padding: '40px 0',
               fontSize: '18px'
             }}>
-              No products available in this category
+              {t('menu.noProducts')}
             </p>
           ) : (
             <>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface PaymentModalProps {
   isOpen: boolean
@@ -17,6 +18,7 @@ export function PaymentModal({
   currency,
   isProcessing
 }: PaymentModalProps) {
+  const { t } = useTranslation()
   const [selectedMethod, setSelectedMethod] = useState<string>('credit_card')
 
   if (!isOpen) return null
@@ -26,9 +28,9 @@ export function PaymentModal({
   }
 
   const paymentMethods = [
-    { id: 'credit_card', name: 'Credit Card', icon: '💳' },
-    { id: 'debit_card', name: 'Debit Card', icon: '💳' },
-    { id: 'cash', name: 'Cash', icon: '💵' }
+    { id: 'credit_card', name: t('payment.creditCard'), icon: '💳' },
+    { id: 'debit_card', name: t('payment.debitCard'), icon: '💳' },
+    { id: 'cash', name: t('payment.cash'), icon: '💵' }
   ]
 
   return (
@@ -60,7 +62,7 @@ export function PaymentModal({
           marginBottom: '24px'
         }}>
           <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>
-            Payment
+            {t('payment.title')}
           </h2>
           <button
             onClick={onClose}
@@ -86,7 +88,7 @@ export function PaymentModal({
           textAlign: 'center'
         }}>
           <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>
-            Total Amount
+            {t('payment.totalAmount')}
           </div>
           <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#333' }}>
             {totalAmount.toFixed(2)} {currency}
@@ -101,7 +103,7 @@ export function PaymentModal({
             marginBottom: '12px',
             color: '#333'
           }}>
-            Select Payment Method
+            {t('payment.selectMethod')}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -160,7 +162,7 @@ export function PaymentModal({
               opacity: isProcessing ? 0.5 : 1
             }}
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleConfirm}
@@ -177,7 +179,7 @@ export function PaymentModal({
               transition: 'background-color 0.2s'
             }}
           >
-            {isProcessing ? 'Processing...' : `Pay ${totalAmount.toFixed(2)} ${currency}`}
+            {isProcessing ? t('payment.processing') : `${t('payment.pay')} ${totalAmount.toFixed(2)} ${currency}`}
           </button>
         </div>
 
@@ -191,7 +193,7 @@ export function PaymentModal({
             textAlign: 'center',
             color: '#856404'
           }}>
-            Processing your payment, please wait...
+            {t('payment.processingMessage')}
           </div>
         )}
       </div>

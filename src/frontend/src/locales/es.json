@@ -1,0 +1,82 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "total": "Total",
+    "currency": "EUR"
+  },
+  "menu": {
+    "title": "Menú",
+    "table": "Mesa",
+    "session": "Sesión",
+    "live": "En vivo",
+    "disconnected": "Desconectado",
+    "noProducts": "No hay productos disponibles en esta categoría",
+    "loadingProducts": "Cargando productos..."
+  },
+  "cart": {
+    "title": "Tu Pedido",
+    "empty": "Tu carrito está vacío",
+    "emptySubtitle": "Añade productos del menú para comenzar",
+    "removeItem": "Eliminar producto",
+    "decreaseQuantity": "Disminuir cantidad",
+    "increaseQuantity": "Aumentar cantidad",
+    "confirmOrder": "Confirmar Pedido",
+    "confirming": "Confirmando...",
+    "clearCart": "Vaciar Carrito",
+    "orderConfirmed": "✓ ¡Pedido confirmado! Listo para pagar.",
+    "proceedToPayment": "Proceder al Pago",
+    "closeCart": "Cerrar carrito"
+  },
+  "payment": {
+    "title": "Pago",
+    "totalAmount": "Importe Total",
+    "selectMethod": "Seleccionar Método de Pago",
+    "creditCard": "Tarjeta de Crédito",
+    "debitCard": "Tarjeta de Débito",
+    "cash": "Efectivo",
+    "processing": "Procesando...",
+    "processingMessage": "Procesando tu pago, por favor espera...",
+    "pay": "Pagar",
+    "paymentSuccess": "¡Pago exitoso! Gracias por tu pedido.",
+    "paymentFailed": "El pago falló"
+  },
+  "kitchen": {
+    "title": "Panel de Cocina",
+    "activeOrders": "Pedidos Activos",
+    "noOrders": "No hay pedidos activos",
+    "table": "Mesa",
+    "items": "productos",
+    "searchPlaceholder": "Buscar por mesa, ID de pedido o producto...",
+    "sortByTime": "Ordenar por Tiempo",
+    "sortByTable": "Ordenar por Mesa",
+    "sortByTotal": "Ordenar por Total",
+    "orderStatus": {
+      "Confirmed": "Confirmado",
+      "Preparing": "Preparando",
+      "Ready": "Listo",
+      "Delivered": "Entregado"
+    },
+    "actions": {
+      "startPreparing": "Comenzar a Preparar",
+      "markReady": "Marcar como Listo",
+      "markDelivered": "Marcar como Entregado"
+    },
+    "statusUpdated": "Estado del pedido actualizado exitosamente",
+    "updateFailed": "Error al actualizar el estado del pedido"
+  },
+  "notifications": {
+    "orderStatusChanged": "El estado de tu pedido cambió a: {{status}}",
+    "noOrderFound": "No se encontró pedido. Por favor añade productos a tu carrito primero.",
+    "orderConfirmedSuccess": "¡Pedido confirmado! Tu pedido ha sido enviado a la cocina.",
+    "orderConfirmFailed": "Error al confirmar el pedido. Por favor intenta nuevamente."
+  },
+  "language": {
+    "select": "Idioma",
+    "en": "English",
+    "es": "Español"
+  }
+}

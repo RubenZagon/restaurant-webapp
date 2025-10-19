@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useCartStore } from '../../store/cartStore'
 import { colors } from '../../theme/colors'
 
@@ -18,6 +19,7 @@ export function ShoppingCart({
   submitting = false,
   orderConfirmed = false
 }: ShoppingCartProps) {
+  const { t } = useTranslation()
   const items = useCartStore(state => state.items)
   const updateQuantity = useCartStore(state => state.updateQuantity)
   const removeItem = useCartStore(state => state.removeItem)
@@ -77,7 +79,7 @@ export function ShoppingCart({
           fontWeight: '600',
           color: colors.text.inverse
         }}>
-          Your Order
+          {t('cart.title')}
         </h2>
         <button
           onClick={onClose}
@@ -90,7 +92,7 @@ export function ShoppingCart({
             lineHeight: '1',
             padding: '0 8px'
           }}
-          aria-label="Close cart"
+          aria-label={t('cart.closeCart')}
         >
           ×
         </button>
@@ -109,8 +111,8 @@ export function ShoppingCart({
             color: colors.text.secondary,
             marginTop: '50px'
           }}>
-            <p style={{ fontSize: '18px', fontWeight: '500' }}>Your cart is empty</p>
-            <p style={{ fontSize: '14px' }}>Add items from the menu to get started</p>
+            <p style={{ fontSize: '18px', fontWeight: '500' }}>{t('cart.empty')}</p>
+            <p style={{ fontSize: '14px' }}>{t('cart.emptySubtitle')}</p>
           </div>
         ) : (
           items.map(item => (
@@ -159,8 +161,8 @@ export function ShoppingCart({
                     padding: '0 8px',
                     lineHeight: '1'
                   }}
-                  title="Remove item"
-                  aria-label="Remove item"
+                  title={t('cart.removeItem')}
+                  aria-label={t('cart.removeItem')}
                 >
                   ×
                 </button>
@@ -189,7 +191,7 @@ export function ShoppingCart({
                       alignItems: 'center',
                       justifyContent: 'center'
                     }}
-                    aria-label="Decrease quantity"
+                    aria-label={t('cart.decreaseQuantity')}
                   >
                     -
                   </button>
@@ -219,7 +221,7 @@ export function ShoppingCart({
                       alignItems: 'center',
                       justifyContent: 'center'
                     }}
-                    aria-label="Increase quantity"
+                    aria-label={t('cart.increaseQuantity')}
                   >
                     +
                   </button>
@@ -252,7 +254,7 @@ export function ShoppingCart({
             fontWeight: 'bold',
             color: colors.text.primary
           }}>
-            <span>Total:</span>
+            <span>{t('common.total')}:</span>
             <span style={{ color: colors.primary.main }}>
               {total.toFixed(2)} {currency}
             </span>
@@ -290,7 +292,7 @@ export function ShoppingCart({
                   }
                 }}
               >
-                {submitting ? 'Confirming...' : 'Confirm Order'}
+                {submitting ? t('cart.confirming') : t('cart.confirmOrder')}
               </button>
 
               <button
@@ -316,7 +318,7 @@ export function ShoppingCart({
                   e.currentTarget.style.color = colors.status.error
                 }}
               >
-                Clear Cart
+                {t('cart.clearCart')}
               </button>
             </>
           ) : (
@@ -331,7 +333,7 @@ export function ShoppingCart({
                 textAlign: 'center',
                 fontWeight: '600'
               }}>
-                ✓ Order confirmed! Ready to pay.
+                {t('cart.orderConfirmed')}
               </div>
 
               {onPayment && (
@@ -359,7 +361,7 @@ export function ShoppingCart({
                     e.currentTarget.style.transform = 'translateY(0)'
                   }}
                 >
-                  Proceed to Payment
+                  {t('cart.proceedToPayment')}
                 </button>
               )}
 
@@ -384,7 +386,7 @@ export function ShoppingCart({
                   e.currentTarget.style.backgroundColor = 'transparent'
                 }}
               >
-                Close
+                {t('common.close')}
               </button>
             </>
           )}

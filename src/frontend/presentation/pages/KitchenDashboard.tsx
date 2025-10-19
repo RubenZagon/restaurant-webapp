@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import * as signalR from '@microsoft/signalr'
 import { Order, getAllActiveOrders, updateOrderStatus } from '@infrastructure/api/ordersApi.ts'
 import { OrderCard } from '../../src/presentation/components/OrderCard'
+import { LanguageSelector } from '../../src/presentation/components/LanguageSelector'
 import { colors } from '@/src/theme/colors.ts'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
@@ -19,6 +21,7 @@ interface OrderStatusNotification extends OrderNotification {
 }
 
 export function KitchenDashboard() {
+  const { t } = useTranslation()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null)
@@ -49,10 +52,10 @@ export function KitchenDashboard() {
     try {
       await updateOrderStatus(orderId, newStatus)
       await fetchOrders() // Refresh orders after update
-      showNotification('Order status updated successfully!')
+      showNotification(t('kitchen.statusUpdated'))
     } catch (err) {
       console.error('Error updating order status:', err)
-      setError('Failed to update order status')
+      setError(t('kitchen.updateFailed'))
     } finally {
       setUpdatingOrderId(null)
     }
@@ -187,7 +190,7 @@ export function KitchenDashboard() {
           fontSize: '20px'
         }}
       >
-        Loading orders...
+        {t('common.loading')}
       </div>
     )
   }
@@ -223,8 +226,9 @@ export function KitchenDashboard() {
               fontWeight: '700',
               color: colors.primary.main
             }}>
-              Kitchen Dashboard
+              {t('kitchen.title')}
             </h1>
+            <LanguageSelector />
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
               {/* Connection Status */}
               <div style={{
@@ -264,7 +268,7 @@ export function KitchenDashboard() {
                   boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
                 }}
               >
-                {orders.length} Active Orders
+                {orders.length} {t('kitchen.activeOrders')}
               </div>
             </div>
           </div>
@@ -280,7 +284,7 @@ export function KitchenDashboard() {
             {/* Search Input */}
             <input
               type="text"
-              placeholder="Search by table, order ID, or product..."
+              placeholder={t('kitchen.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{
@@ -312,9 +316,9 @@ export function KitchenDashboard() {
                 fontWeight: '500'
               }}
             >
-              <option value="time">Sort by Time</option>
-              <option value="table">Sort by Table</option>
-              <option value="total">Sort by Total</option>
+              <option value="time">{t('kitchen.sortByTime')}</option>
+              <option value="table">{t('kitchen.sortByTable')}</option>
+              <option value="total">{t('kitchen.sortByTotal')}</option>
             </select>
           </div>
         </div>

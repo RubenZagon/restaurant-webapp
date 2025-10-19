@@ -1,0 +1,82 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "close": "Close",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "total": "Total",
+    "currency": "EUR"
+  },
+  "menu": {
+    "title": "Menu",
+    "table": "Table",
+    "session": "Session",
+    "live": "Live",
+    "disconnected": "Disconnected",
+    "noProducts": "No products available in this category",
+    "loadingProducts": "Loading products..."
+  },
+  "cart": {
+    "title": "Your Order",
+    "empty": "Your cart is empty",
+    "emptySubtitle": "Add items from the menu to get started",
+    "removeItem": "Remove item",
+    "decreaseQuantity": "Decrease quantity",
+    "increaseQuantity": "Increase quantity",
+    "confirmOrder": "Confirm Order",
+    "confirming": "Confirming...",
+    "clearCart": "Clear Cart",
+    "orderConfirmed": "✓ Order confirmed! Ready to pay.",
+    "proceedToPayment": "Proceed to Payment",
+    "closeCart": "Close cart"
+  },
+  "payment": {
+    "title": "Payment",
+    "totalAmount": "Total Amount",
+    "selectMethod": "Select Payment Method",
+    "creditCard": "Credit Card",
+    "debitCard": "Debit Card",
+    "cash": "Cash",
+    "processing": "Processing...",
+    "processingMessage": "Processing your payment, please wait...",
+    "pay": "Pay",
+    "paymentSuccess": "Payment successful! Thank you for your order.",
+    "paymentFailed": "Payment failed"
+  },
+  "kitchen": {
+    "title": "Kitchen Dashboard",
+    "activeOrders": "Active Orders",
+    "noOrders": "No active orders",
+    "table": "Table",
+    "items": "items",
+    "searchPlaceholder": "Search by table, order ID, or product...",
+    "sortByTime": "Sort by Time",
+    "sortByTable": "Sort by Table",
+    "sortByTotal": "Sort by Total",
+    "orderStatus": {
+      "Confirmed": "Confirmed",
+      "Preparing": "Preparing",
+      "Ready": "Ready",
+      "Delivered": "Delivered"
+    },
+    "actions": {
+      "startPreparing": "Start Preparing",
+      "markReady": "Mark as Ready",
+      "markDelivered": "Mark as Delivered"
+    },
+    "statusUpdated": "Order status updated successfully",
+    "updateFailed": "Failed to update order status"
+  },
+  "notifications": {
+    "orderStatusChanged": "Your order status changed to: {{status}}",
+    "noOrderFound": "No order found. Please add items to your cart first.",
+    "orderConfirmedSuccess": "Order confirmed! Your order has been sent to the kitchen.",
+    "orderConfirmFailed": "Failed to confirm order. Please try again."
+  },
+  "language": {
+    "select": "Language",
+    "en": "English",
+    "es": "Español"
+  }
+}
