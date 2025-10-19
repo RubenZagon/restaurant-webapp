@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Product } from '@infrastructure/api/productsApi'
 import { useCartStore } from '@/src/store/cartStore.ts'
 import { addProductToOrder } from '@infrastructure/api/ordersApi'
 import { AllergenList } from '../../src/presentation/components/AllergenIcons'
+import { translateText } from '../../src/i18n/productTranslations'
 import { colors } from '@/src/theme/colors.ts'
 
 interface ProductCardProps {
@@ -10,6 +12,7 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product }: ProductCardProps) {
+  const { i18n, t } = useTranslation()
   const addItem = useCartStore(state => state.addItem)
   const orderId = useCartStore(state => state.orderId)
   const [adding, setAdding] = useState(false)
@@ -103,7 +106,7 @@ function ProductCard({ product }: ProductCardProps) {
               fontWeight: '600',
               color: colors.text.primary
             }}>
-              {product.name}
+              {translateText(product.name, i18n.language)}
             </h3>
             {product.description && (
               <p style={{
@@ -112,7 +115,7 @@ function ProductCard({ product }: ProductCardProps) {
                 fontSize: '0.9em',
                 lineHeight: '1.5'
               }}>
-                {product.description}
+                {translateText(product.description, i18n.language)}
               </p>
             )}
           </div>
@@ -165,7 +168,7 @@ function ProductCard({ product }: ProductCardProps) {
             }
           }}
         >
-          {adding ? 'Adding...' : 'Add to Cart'}
+          {adding ? t('cart.adding') : t('cart.addToCart')}
         </button>
       </div>
     </div>

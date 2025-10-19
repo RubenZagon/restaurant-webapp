@@ -24,6 +24,8 @@
     "removeItem": "Remove item",
     "decreaseQuantity": "Decrease quantity",
     "increaseQuantity": "Increase quantity",
+    "addToCart": "➕ Add to Cart",
+    "adding": "⏳ Adding...",
     "confirmOrder": "✅ Confirm Order",
     "confirming": "⏳ Confirming...",
     "clearCart": "🗑️ Clear Cart",

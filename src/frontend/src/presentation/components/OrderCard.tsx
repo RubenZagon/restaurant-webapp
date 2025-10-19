@@ -67,6 +67,11 @@ export function OrderCard({ order, onStatusUpdate, updating = false }: OrderCard
     const diffMs = now.getTime() - created.getTime()
     const diffMins = Math.floor(diffMs / 60000)
     const minuteLabel = diffMins !== 1 ? t('kitchen.minutesPlural') : t('kitchen.minutes')
+
+    // Different word order for Spanish vs English
+    if (t('kitchen.timeAgo') === 'hace') {
+      return `${t('kitchen.timeAgo')} ${diffMins} ${minuteLabel}`
+    }
     return `${diffMins} ${minuteLabel} ${t('kitchen.timeAgo')}`
   }
 

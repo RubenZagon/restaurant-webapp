@@ -1,4 +1,6 @@
+import { useTranslation } from 'react-i18next'
 import { Category } from '@infrastructure/api/productsApi'
+import { translateText } from '../../src/i18n/productTranslations'
 
 interface CategoryTabsProps {
   categories: Category[]
@@ -7,6 +9,8 @@ interface CategoryTabsProps {
 }
 
 function CategoryTabs({ categories, selectedCategoryId, onSelectCategory }: CategoryTabsProps) {
+  const { i18n } = useTranslation()
+
   return (
     <div style={{
       display: 'flex',
@@ -32,7 +36,7 @@ function CategoryTabs({ categories, selectedCategoryId, onSelectCategory }: Cate
             whiteSpace: 'nowrap'
           }}
         >
-          {category.name}
+          {translateText(category.name, i18n.language)}
         </button>
       ))}
     </div>

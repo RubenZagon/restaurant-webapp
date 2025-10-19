@@ -58,137 +58,84 @@ public class InMemoryProductRepository : IProductRepository
 
         if (!categoriesList.Any()) return;
 
-        var starters = categoriesList.FirstOrDefault(c => c.Name == "Starters");
-        var mains = categoriesList.FirstOrDefault(c => c.Name == "Main Courses");
-        var desserts = categoriesList.FirstOrDefault(c => c.Name == "Desserts");
-        var drinks = categoriesList.FirstOrDefault(c => c.Name == "Drinks");
+        var bebidas = categoriesList.FirstOrDefault(c => c.Name == "Bebidas");
+        var entrantes = categoriesList.FirstOrDefault(c => c.Name == "Entrantes");
+        var carnes = categoriesList.FirstOrDefault(c => c.Name == "Carnes a la Brasa");
+        var pescados = categoriesList.FirstOrDefault(c => c.Name == "Pescados");
+        var guisos = categoriesList.FirstOrDefault(c => c.Name == "Guisos Canarios");
+        var postres = categoriesList.FirstOrDefault(c => c.Name == "Postres");
+        var cafes = categoriesList.FirstOrDefault(c => c.Name == "Cafés");
 
-        // Starters
-        if (starters != null)
+        // Bebidas
+        if (bebidas != null)
         {
-            AddProduct(Product.Create(
-                "Bruschetta",
-                "Toasted bread with tomatoes, garlic, and basil",
-                new Price(6.50m, "EUR"),
-                starters.Id,
-                new Allergens(new[] { "Gluten" })
-            ));
-
-            AddProduct(Product.Create(
-                "Calamari",
-                "Crispy fried squid with lemon",
-                new Price(8.90m, "EUR"),
-                starters.Id,
-                new Allergens(new[] { "Shellfish", "Gluten" })
-            ));
-
-            AddProduct(Product.Create(
-                "Caprese Salad",
-                "Fresh mozzarella, tomatoes, and basil",
-                new Price(7.50m, "EUR"),
-                starters.Id,
-                new Allergens(new[] { "Dairy" })
-            ));
+            AddProduct(Product.Create("Vino Tinto de la Casa", "Vino tinto del norte de Tenerife", new Price(1.50m, "EUR"), bebidas.Id, Allergens.None()));
+            AddProduct(Product.Create("Vino Blanco de la Casa", "Vino blanco afrutado", new Price(1.50m, "EUR"), bebidas.Id, Allergens.None()));
+            AddProduct(Product.Create("Vino Rosado", "Vino rosado fresco", new Price(1.50m, "EUR"), bebidas.Id, Allergens.None()));
+            AddProduct(Product.Create("Agua", "Agua mineral", new Price(1.00m, "EUR"), bebidas.Id, Allergens.None()));
+            AddProduct(Product.Create("Refresco", "Coca-Cola, Fanta, Sprite", new Price(1.50m, "EUR"), bebidas.Id, Allergens.None()));
+            AddProduct(Product.Create("Cerveza Dorada", "Cerveza canaria", new Price(2.00m, "EUR"), bebidas.Id, Allergens.None()));
+            AddProduct(Product.Create("Tropical", "Cerveza canaria", new Price(2.00m, "EUR"), bebidas.Id, Allergens.None()));
         }
 
-        // Main Courses
-        if (mains != null)
+        // Entrantes
+        if (entrantes != null)
         {
-            AddProduct(Product.Create(
-                "Paella",
-                "Traditional Spanish rice with seafood",
-                new Price(18.90m, "EUR"),
-                mains.Id,
-                new Allergens(new[] { "Shellfish", "Fish" })
-            ));
-
-            AddProduct(Product.Create(
-                "Ribeye Steak",
-                "Prime beef with garlic butter",
-                new Price(24.90m, "EUR"),
-                mains.Id,
-                Allergens.None()
-            ));
-
-            AddProduct(Product.Create(
-                "Vegetarian Lasagna",
-                "Layers of pasta with vegetables and cheese",
-                new Price(14.50m, "EUR"),
-                mains.Id,
-                new Allergens(new[] { "Gluten", "Dairy", "Eggs" })
-            ));
-
-            AddProduct(Product.Create(
-                "Grilled Salmon",
-                "Fresh Atlantic salmon with herbs",
-                new Price(19.90m, "EUR"),
-                mains.Id,
-                new Allergens(new[] { "Fish" })
-            ));
+            AddProduct(Product.Create("Papas Arrugadas con Mojo", "Papas con mojo picón y mojo verde", new Price(4.50m, "EUR"), entrantes.Id, Allergens.None()));
+            AddProduct(Product.Create("Queso Asado", "Queso de cabra asado con mojo", new Price(6.00m, "EUR"), entrantes.Id, new Allergens(new[] { "lactosa" })));
+            AddProduct(Product.Create("Pimientos de Padrón", "Pimientos fritos con sal gorda", new Price(5.00m, "EUR"), entrantes.Id, Allergens.None()));
+            AddProduct(Product.Create("Chicharrones", "Chicharrones caseros", new Price(5.50m, "EUR"), entrantes.Id, Allergens.None()));
+            AddProduct(Product.Create("Chorizo a la Brasa", "Chorizo canario a la brasa", new Price(6.50m, "EUR"), entrantes.Id, Allergens.None()));
+            AddProduct(Product.Create("Champiñones al Ajillo", "Champiñones salteados con ajo", new Price(5.50m, "EUR"), entrantes.Id, Allergens.None()));
         }
 
-        // Desserts
-        if (desserts != null)
+        // Carnes a la Brasa
+        if (carnes != null)
         {
-            AddProduct(Product.Create(
-                "Tiramisu",
-                "Classic Italian coffee-flavored dessert",
-                new Price(6.50m, "EUR"),
-                desserts.Id,
-                new Allergens(new[] { "Gluten", "Dairy", "Eggs" })
-            ));
-
-            AddProduct(Product.Create(
-                "Chocolate Lava Cake",
-                "Warm chocolate cake with molten center",
-                new Price(7.50m, "EUR"),
-                desserts.Id,
-                new Allergens(new[] { "Gluten", "Dairy", "Eggs" })
-            ));
-
-            AddProduct(Product.Create(
-                "Fruit Sorbet",
-                "Refreshing fruit ice cream",
-                new Price(5.50m, "EUR"),
-                desserts.Id,
-                Allergens.None()
-            ));
+            AddProduct(Product.Create("Chuletas de Cerdo", "Chuletas de cerdo a la brasa con papas y ensalada", new Price(9.50m, "EUR"), carnes.Id, Allergens.None()));
+            AddProduct(Product.Create("Costillas", "Costillas de cerdo a la brasa", new Price(10.50m, "EUR"), carnes.Id, Allergens.None()));
+            AddProduct(Product.Create("Pollo al Horno", "Medio pollo al horno con papas", new Price(8.50m, "EUR"), carnes.Id, Allergens.None()));
+            AddProduct(Product.Create("Conejo al Salmorejo", "Conejo marinado en salmorejo canario", new Price(11.00m, "EUR"), carnes.Id, Allergens.None()));
+            AddProduct(Product.Create("Carne de Cabra", "Carne de cabra guisada", new Price(10.50m, "EUR"), carnes.Id, Allergens.None()));
+            AddProduct(Product.Create("Entrecot", "Entrecot de ternera a la brasa", new Price(14.00m, "EUR"), carnes.Id, Allergens.None()));
         }
 
-        // Drinks
-        if (drinks != null)
+        // Pescados
+        if (pescados != null)
         {
-            AddProduct(Product.Create(
-                "Coca-Cola",
-                "Classic soft drink",
-                new Price(2.50m, "EUR"),
-                drinks.Id,
-                Allergens.None()
-            ));
+            AddProduct(Product.Create("Cherne a la Plancha", "Cherne fresco con papas arrugadas", new Price(13.00m, "EUR"), pescados.Id, new Allergens(new[] { "pescado" })));
+            AddProduct(Product.Create("Vieja Saneada", "Vieja a la plancha", new Price(12.00m, "EUR"), pescados.Id, new Allergens(new[] { "pescado" })));
+            AddProduct(Product.Create("Sama a la Plancha", "Sama fresca con guarnición", new Price(13.50m, "EUR"), pescados.Id, new Allergens(new[] { "pescado" })));
+            AddProduct(Product.Create("Pulpo a la Gallega", "Pulpo con papas y pimentón", new Price(14.00m, "EUR"), pescados.Id, new Allergens(new[] { "moluscos" })));
+            AddProduct(Product.Create("Calamares Fritos", "Calamares rebozados", new Price(9.00m, "EUR"), pescados.Id, new Allergens(new[] { "moluscos", "gluten" })));
+        }
 
-            AddProduct(Product.Create(
-                "House Wine (Red)",
-                "Spanish red wine, glass",
-                new Price(4.50m, "EUR"),
-                drinks.Id,
-                new Allergens(new[] { "Sulfites" })
-            ));
+        // Guisos Canarios
+        if (guisos != null)
+        {
+            AddProduct(Product.Create("Ropa Vieja", "Guiso de garbanzos con carne", new Price(8.50m, "EUR"), guisos.Id, Allergens.None()));
+            AddProduct(Product.Create("Potaje de Berros", "Potaje canario con berros y costilla", new Price(7.50m, "EUR"), guisos.Id, Allergens.None()));
+            AddProduct(Product.Create("Puchero Canario", "Puchero con verduras y carnes", new Price(8.00m, "EUR"), guisos.Id, Allergens.None()));
+            AddProduct(Product.Create("Rancho Canario", "Rancho con fideos y papas", new Price(7.00m, "EUR"), guisos.Id, new Allergens(new[] { "gluten" })));
+        }
 
-            AddProduct(Product.Create(
-                "Beer",
-                "Local draft beer",
-                new Price(3.50m, "EUR"),
-                drinks.Id,
-                new Allergens(new[] { "Gluten" })
-            ));
+        // Postres
+        if (postres != null)
+        {
+            AddProduct(Product.Create("Quesillo", "Flan canario casero", new Price(3.50m, "EUR"), postres.Id, new Allergens(new[] { "lactosa", "huevo" })));
+            AddProduct(Product.Create("Bienmesabe", "Postre de almendras típico canario", new Price(4.00m, "EUR"), postres.Id, new Allergens(new[] { "frutos secos", "huevo" })));
+            AddProduct(Product.Create("Frangollo", "Postre de gofio con leche", new Price(3.50m, "EUR"), postres.Id, new Allergens(new[] { "lactosa", "gluten" })));
+            AddProduct(Product.Create("Príncipe Alberto", "Bizcocho con almendras y chocolate", new Price(4.00m, "EUR"), postres.Id, new Allergens(new[] { "gluten", "lactosa", "huevo", "frutos secos" })));
+            AddProduct(Product.Create("Helado de la Casa", "Helado artesanal", new Price(3.00m, "EUR"), postres.Id, new Allergens(new[] { "lactosa" })));
+        }
 
-            AddProduct(Product.Create(
-                "Sparkling Water",
-                "San Pellegrino 500ml",
-                new Price(2.00m, "EUR"),
-                drinks.Id,
-                Allergens.None()
-            ));
+        // Cafés
+        if (cafes != null)
+        {
+            AddProduct(Product.Create("Café Solo", "Café expreso", new Price(1.20m, "EUR"), cafes.Id, Allergens.None()));
+            AddProduct(Product.Create("Cortado", "Café cortado", new Price(1.30m, "EUR"), cafes.Id, new Allergens(new[] { "lactosa" })));
+            AddProduct(Product.Create("Café con Leche", "Café con leche", new Price(1.40m, "EUR"), cafes.Id, new Allergens(new[] { "lactosa" })));
+            AddProduct(Product.Create("Barraquito", "Café canario con leche condensada y licor", new Price(2.00m, "EUR"), cafes.Id, new Allergens(new[] { "lactosa" })));
         }
     }
 

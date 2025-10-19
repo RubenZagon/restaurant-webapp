@@ -44,14 +44,20 @@ public class InMemoryCategoryRepository : ICategoryRepository
 
     private void SeedData()
     {
-        var starters = Category.Create("Starters", "Delicious appetizers to start your meal");
-        var mains = Category.Create("Main Courses", "Our signature main dishes");
-        var desserts = Category.Create("Desserts", "Sweet treats to finish your meal");
-        var drinks = Category.Create("Drinks", "Beverages and cocktails");
+        var bebidas = Category.Create("Bebidas", "Vinos de la casa y bebidas");
+        var entrantes = Category.Create("Entrantes", "Para abrir boca");
+        var carnes = Category.Create("Carnes a la Brasa", "Nuestras especialidades a la parrilla");
+        var pescados = Category.Create("Pescados", "Pescado fresco del día");
+        var guisos = Category.Create("Guisos Canarios", "Potajes y guisos tradicionales");
+        var postres = Category.Create("Postres", "Postres caseros");
+        var cafes = Category.Create("Cafés", "Café y bebidas calientes");
 
-        _categories[starters.Id.Value] = starters;
-        _categories[mains.Id.Value] = mains;
-        _categories[desserts.Id.Value] = desserts;
-        _categories[drinks.Id.Value] = drinks;
+        _categories[bebidas.Id.Value] = bebidas;
+        _categories[entrantes.Id.Value] = entrantes;
+        _categories[carnes.Id.Value] = carnes;
+        _categories[pescados.Id.Value] = pescados;
+        _categories[guisos.Id.Value] = guisos;
+        _categories[postres.Id.Value] = postres;
+        _categories[cafes.Id.Value] = cafes;
     }
 }
