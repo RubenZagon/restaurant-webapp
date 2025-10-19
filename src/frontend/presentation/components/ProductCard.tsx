@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Product } from '@infrastructure/api/productsApi'
 import { useCartStore } from '../../src/store/cartStore'
 import { addProductToOrder } from '@infrastructure/api/ordersApi'
+import { AllergenList } from '../../src/presentation/components/AllergenIcons'
+import { colors } from '../../src/theme/colors'
 
 interface ProductCardProps {
   product: Product
@@ -43,68 +45,129 @@ function ProductCard({ product }: ProductCardProps) {
     }
   }
 
+  // Generate placeholder image URL based on product name
+  const getProductImageUrl = (productName: string): string => {
+    // Use a placeholder service with product name as seed
+    const seed = encodeURIComponent(productName)
+    return `https://ui-avatars.com/api/?name=${seed}&size=200&background=8B4513&color=FFFBF0&bold=true`
+  }
+
   return (
     <div style={{
-      border: '1px solid #ddd',
-      borderRadius: '8px',
-      padding: '16px',
+      border: `2px solid ${colors.border.light}`,
+      borderRadius: '12px',
+      padding: '0',
       marginBottom: '16px',
-      backgroundColor: '#fff',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      backgroundColor: colors.background.paper,
+      boxShadow: '0 4px 6px rgba(0,0,0,0.08)',
+      overflow: 'hidden',
+      transition: 'all 0.3s ease'
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-        <div style={{ flex: 1 }}>
-          <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2em' }}>{product.name}</h3>
-          {product.description && (
-            <p style={{ margin: '0 0 12px 0', color: '#666', fontSize: '0.9em' }}>
-              {product.description}
-            </p>
-          )}
-          {product.allergens && product.allergens.length > 0 && (
-            <div style={{ fontSize: '0.85em', color: '#e74c3c', marginBottom: '12px' }}>
-              <strong>Allergens:</strong> {product.allergens.join(', ')}
-            </div>
-          )}
-        </div>
-        <div style={{
-          fontSize: '1.3em',
-          fontWeight: 'bold',
-          color: '#27ae60',
-          marginLeft: '16px'
-        }}>
-          {product.price.toFixed(2)} {product.currency}
-        </div>
+      {/* Product Image */}
+      <div style={{
+        width: '100%',
+        height: '180px',
+        backgroundColor: colors.neutral.lightGray,
+        overflow: 'hidden',
+        position: 'relative'
+      }}>
+        <img
+          src={getProductImageUrl(product.name)}
+          alt={product.name}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover'
+          }}
+          onError={(e) => {
+            // Fallback if image fails to load
+            const target = e.target as HTMLImageElement
+            target.style.display = 'none'
+            if (target.parentElement) {
+              target.parentElement.style.display = 'flex'
+              target.parentElement.style.alignItems = 'center'
+              target.parentElement.style.justifyContent = 'center'
+              target.parentElement.innerHTML = `<span style="color: ${colors.text.secondary}; font-size: 48px;">🍽️</span>`
+            }
+          }}
+        />
       </div>
-      <button
-        onClick={handleAddToCart}
-        disabled={adding}
-        style={{
-          width: '100%',
-          padding: '12px',
-          marginTop: '12px',
-          backgroundColor: adding ? '#95a5a6' : '#27ae60',
-          color: 'white',
-          border: 'none',
-          borderRadius: '6px',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          cursor: adding ? 'not-allowed' : 'pointer',
-          transition: 'background-color 0.2s',
-          opacity: adding ? 0.7 : 1
-        }}
-        onMouseEnter={(e) => {
-          if (!adding) {
-            e.currentTarget.style.backgroundColor = '#229954'
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!adding) {
-            e.currentTarget.style.backgroundColor = '#27ae60'
-          }
-        }}
-      >
-        {adding ? 'Adding...' : 'Add to Cart'}
-      </button>
+
+      {/* Product Content */}
+      <div style={{ padding: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
+          <div style={{ flex: 1 }}>
+            <h3 style={{
+              margin: '0 0 8px 0',
+              fontSize: '1.25em',
+              fontWeight: '600',
+              color: colors.text.primary
+            }}>
+              {product.name}
+            </h3>
+            {product.description && (
+              <p style={{
+                margin: '0 0 12px 0',
+                color: colors.text.secondary,
+                fontSize: '0.9em',
+                lineHeight: '1.5'
+              }}>
+                {product.description}
+              </p>
+            )}
+          </div>
+          <div style={{
+            fontSize: '1.4em',
+            fontWeight: 'bold',
+            color: colors.primary.main,
+            marginLeft: '16px',
+            whiteSpace: 'nowrap'
+          }}>
+            {product.price.toFixed(2)} {product.currency}
+          </div>
+        </div>
+
+        {/* Allergen Icons */}
+        {product.allergens && product.allergens.length > 0 && (
+          <div style={{ marginBottom: '12px' }}>
+            <AllergenList allergens={product.allergens} size={20} />
+          </div>
+        )}
+
+        {/* Add to Cart Button */}
+        <button
+          onClick={handleAddToCart}
+          disabled={adding}
+          style={{
+            width: '100%',
+            padding: '14px',
+            marginTop: '8px',
+            backgroundColor: adding ? colors.neutral.gray : colors.primary.main,
+            color: colors.text.inverse,
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '16px',
+            fontWeight: '600',
+            cursor: adding ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s ease',
+            opacity: adding ? 0.7 : 1
+          }}
+          onMouseEnter={(e) => {
+            if (!adding) {
+              e.currentTarget.style.backgroundColor = colors.primary.light
+              e.currentTarget.style.transform = 'translateY(-1px)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!adding) {
+              e.currentTarget.style.backgroundColor = colors.primary.main
+              e.currentTarget.style.transform = 'translateY(0)'
+            }
+          }}
+        >
+          {adding ? 'Adding...' : 'Add to Cart'}
+        </button>
+      </div>
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { Order } from '../../../infrastructure/api/ordersApi'
+import { colors } from '../../theme/colors'
 
 interface OrderCardProps {
   order: Order
@@ -10,15 +11,15 @@ export function OrderCard({ order, onStatusUpdate, updating = false }: OrderCard
   const getStatusColor = (status: string): string => {
     switch (status) {
       case 'Confirmed':
-        return '#3B82F6' // Blue
+        return colors.secondary.main // Blue
       case 'Preparing':
-        return '#F59E0B' // Amber
+        return colors.status.warning // Orange
       case 'Ready':
-        return '#10B981' // Green
+        return colors.status.success // Green
       case 'Delivered':
-        return '#6B7280' // Gray
+        return colors.neutral.gray // Gray
       default:
-        return '#6B7280'
+        return colors.neutral.gray
     }
   }
 
@@ -68,21 +69,32 @@ export function OrderCard({ order, onStatusUpdate, updating = false }: OrderCard
   return (
     <div
       style={{
-        backgroundColor: 'white',
-        borderRadius: '8px',
-        padding: '16px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        borderLeft: '4px solid ' + getStatusColor(order.status),
-        marginBottom: '12px'
+        backgroundColor: colors.background.paper,
+        borderRadius: '10px',
+        padding: '18px',
+        boxShadow: '0 3px 8px rgba(0,0,0,0.12)',
+        borderLeft: `5px solid ${getStatusColor(order.status)}`,
+        marginBottom: '14px',
+        transition: 'all 0.2s ease'
       }}
     >
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '14px' }}>
         <div>
-          <h3 style={{ margin: '0 0 4px 0', fontSize: '18px', fontWeight: '600' }}>
+          <h3 style={{
+            margin: '0 0 6px 0',
+            fontSize: '20px',
+            fontWeight: '700',
+            color: colors.text.primary
+          }}>
             Table {order.tableNumber}
           </h3>
-          <p style={{ margin: 0, fontSize: '12px', color: '#6B7280' }}>
+          <p style={{
+            margin: 0,
+            fontSize: '12px',
+            color: colors.text.secondary,
+            fontFamily: 'monospace'
+          }}>
             Order #{order.id.substring(0, 8)}
           </p>
         </div>
@@ -90,38 +102,62 @@ export function OrderCard({ order, onStatusUpdate, updating = false }: OrderCard
           <div
             style={{
               backgroundColor: getStatusColor(order.status),
-              color: 'white',
-              padding: '4px 12px',
-              borderRadius: '12px',
-              fontSize: '12px',
-              fontWeight: '600',
-              marginBottom: '4px'
+              color: colors.text.inverse,
+              padding: '6px 14px',
+              borderRadius: '14px',
+              fontSize: '13px',
+              fontWeight: '700',
+              marginBottom: '6px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}
           >
             {order.status}
           </div>
-          <p style={{ margin: 0, fontSize: '11px', color: '#6B7280' }}>
+          <p style={{
+            margin: 0,
+            fontSize: '11px',
+            color: colors.text.secondary,
+            fontWeight: '500'
+          }}>
             {getElapsedTime()} ago
           </p>
         </div>
       </div>
 
       {/* Order Lines */}
-      <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '12px', marginBottom: '12px' }}>
+      <div style={{
+        borderTop: `2px solid ${colors.border.light}`,
+        paddingTop: '14px',
+        marginBottom: '14px',
+        backgroundColor: colors.background.secondary,
+        margin: '0 -18px',
+        padding: '14px 18px'
+      }}>
         {order.lines.map((line) => (
           <div
             key={line.id}
             style={{
               display: 'flex',
               justifyContent: 'space-between',
-              marginBottom: '6px',
-              fontSize: '14px'
+              marginBottom: '8px',
+              fontSize: '15px',
+              padding: '6px 0'
             }}
           >
-            <span>
-              <strong>{line.quantity}x</strong> {line.productName}
+            <span style={{ color: colors.text.primary }}>
+              <strong style={{
+                color: colors.primary.main,
+                fontSize: '16px',
+                marginRight: '6px'
+              }}>
+                {line.quantity}x
+              </strong>
+              {line.productName}
             </span>
-            <span style={{ color: '#6B7280' }}>
+            <span style={{
+              color: colors.text.secondary,
+              fontWeight: '600'
+            }}>
               {line.subtotal.toFixed(2)} {order.currency}
             </span>
           </div>
@@ -129,20 +165,36 @@ export function OrderCard({ order, onStatusUpdate, updating = false }: OrderCard
       </div>
 
       {/* Footer */}
-      <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '12px' }}>
+      <div style={{
+        borderTop: `2px solid ${colors.border.light}`,
+        paddingTop: '14px'
+      }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#6B7280' }}>
+            <p style={{
+              margin: '0 0 4px 0',
+              fontSize: '12px',
+              color: colors.text.secondary
+            }}>
               Created: {formatTime(order.createdAt)}
             </p>
             {order.confirmedAt && (
-              <p style={{ margin: 0, fontSize: '12px', color: '#6B7280' }}>
+              <p style={{
+                margin: 0,
+                fontSize: '12px',
+                color: colors.text.secondary
+              }}>
                 Confirmed: {formatTime(order.confirmedAt)}
               </p>
             )}
           </div>
           <div style={{ textAlign: 'right' }}>
-            <p style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '700' }}>
+            <p style={{
+              margin: '0 0 10px 0',
+              fontSize: '20px',
+              fontWeight: '700',
+              color: colors.primary.main
+            }}>
               {order.total.toFixed(2)} {order.currency}
             </p>
             {nextStatus && nextStatusLabel && (
@@ -151,24 +203,27 @@ export function OrderCard({ order, onStatusUpdate, updating = false }: OrderCard
                 disabled={updating}
                 style={{
                   backgroundColor: getStatusColor(nextStatus),
-                  color: 'white',
+                  color: colors.text.inverse,
                   border: 'none',
-                  borderRadius: '6px',
-                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  padding: '10px 18px',
                   fontSize: '14px',
-                  fontWeight: '600',
+                  fontWeight: '700',
                   cursor: updating ? 'not-allowed' : 'pointer',
                   opacity: updating ? 0.6 : 1,
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}
                 onMouseOver={(e) => {
                   if (!updating) {
                     e.currentTarget.style.opacity = '0.9'
+                    e.currentTarget.style.transform = 'translateY(-1px)'
                   }
                 }}
                 onMouseOut={(e) => {
                   if (!updating) {
                     e.currentTarget.style.opacity = '1'
+                    e.currentTarget.style.transform = 'translateY(0)'
                   }
                 }}
               >

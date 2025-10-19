@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import * as signalR from '@microsoft/signalr'
 import { Order, getAllActiveOrders, updateOrderStatus } from '../../infrastructure/api/ordersApi'
 import { OrderCard } from '../../src/presentation/components/OrderCard'
+import { colors } from '../../src/theme/colors'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
@@ -192,43 +193,75 @@ export function KitchenDashboard() {
   }
 
   return (
-    <div style={{ backgroundColor: '#F3F4F6', minHeight: '100vh', padding: '20px' }}>
+    <div style={{
+      backgroundColor: colors.background.main,
+      minHeight: '100vh',
+      padding: '20px'
+    }}>
       {/* Header */}
       <div
         style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '12px',
-          marginBottom: '20px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          backgroundColor: colors.background.paper,
+          padding: '24px',
+          borderRadius: '16px',
+          marginBottom: '24px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+          border: `2px solid ${colors.border.light}`
         }}
       >
-        <div style={{ marginBottom: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h1 style={{ margin: 0, fontSize: '28px', fontWeight: '700' }}>Kitchen Dashboard</h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '16px'
+          }}>
+            <h1 style={{
+              margin: 0,
+              fontSize: '32px',
+              fontWeight: '700',
+              color: colors.primary.main
+            }}>
+              Kitchen Dashboard
+            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
               {/* Connection Status */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '8px 16px',
+                backgroundColor: isConnected ? colors.orderStatus.ready.bg : '#ffebee',
+                borderRadius: '10px',
+                border: `2px solid ${isConnected ? colors.orderStatus.ready.border : colors.status.error}`
+              }}>
                 <div
                   style={{
-                    width: '10px',
-                    height: '10px',
+                    width: '12px',
+                    height: '12px',
                     borderRadius: '50%',
-                    backgroundColor: isConnected ? '#10B981' : '#EF4444'
+                    backgroundColor: isConnected ? colors.status.success : colors.status.error
                   }}
                 />
-                <span style={{ fontSize: '14px', color: '#6B7280' }}>
+                <span style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: isConnected ? colors.orderStatus.ready.text : colors.status.error
+                }}>
                   {isConnected ? 'Live' : 'Disconnected'}
                 </span>
               </div>
               {/* Active Orders Count */}
               <div
                 style={{
-                  backgroundColor: '#3B82F6',
-                  color: 'white',
-                  padding: '8px 16px',
-                  borderRadius: '20px',
-                  fontWeight: '600'
+                  backgroundColor: colors.primary.main,
+                  color: colors.text.inverse,
+                  padding: '10px 20px',
+                  borderRadius: '24px',
+                  fontWeight: '700',
+                  fontSize: '15px',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
                 }}
               >
                 {orders.length} Active Orders
@@ -237,7 +270,13 @@ export function KitchenDashboard() {
           </div>
 
           {/* Search and Sort Controls */}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '16px', alignItems: 'center' }}>
+          <div style={{
+            display: 'flex',
+            gap: '12px',
+            marginTop: '20px',
+            alignItems: 'center',
+            flexWrap: 'wrap'
+          }}>
             {/* Search Input */}
             <input
               type="text"
@@ -246,11 +285,14 @@ export function KitchenDashboard() {
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{
                 flex: 1,
-                padding: '10px 16px',
-                border: '1px solid #D1D5DB',
-                borderRadius: '8px',
+                minWidth: '250px',
+                padding: '12px 18px',
+                border: `2px solid ${colors.border.main}`,
+                borderRadius: '10px',
                 fontSize: '14px',
-                outline: 'none'
+                outline: 'none',
+                backgroundColor: colors.background.paper,
+                color: colors.text.primary
               }}
             />
 
@@ -259,13 +301,15 @@ export function KitchenDashboard() {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'time' | 'table' | 'total')}
               style={{
-                padding: '10px 16px',
-                border: '1px solid #D1D5DB',
-                borderRadius: '8px',
+                padding: '12px 18px',
+                border: `2px solid ${colors.border.main}`,
+                borderRadius: '10px',
                 fontSize: '14px',
-                backgroundColor: 'white',
+                backgroundColor: colors.background.paper,
+                color: colors.text.primary,
                 cursor: 'pointer',
-                outline: 'none'
+                outline: 'none',
+                fontWeight: '500'
               }}
             >
               <option value="time">Sort by Time</option>
@@ -281,28 +325,102 @@ export function KitchenDashboard() {
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
             gap: '16px',
-            marginTop: '16px'
+            marginTop: '20px'
           }}
         >
-          <div style={{ padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
-            <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px' }}>Total Orders</div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#111827' }}>{stats.totalOrders}</div>
+          <div style={{
+            padding: '18px',
+            backgroundColor: colors.background.secondary,
+            borderRadius: '12px',
+            border: `2px solid ${colors.border.light}`
+          }}>
+            <div style={{
+              fontSize: '12px',
+              color: colors.text.secondary,
+              marginBottom: '6px',
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Total Orders
+            </div>
+            <div style={{
+              fontSize: '28px',
+              fontWeight: '700',
+              color: colors.primary.main
+            }}>
+              {stats.totalOrders}
+            </div>
           </div>
-          <div style={{ padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
-            <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px' }}>Total Revenue</div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#111827' }}>
+          <div style={{
+            padding: '18px',
+            backgroundColor: colors.background.secondary,
+            borderRadius: '12px',
+            border: `2px solid ${colors.border.light}`
+          }}>
+            <div style={{
+              fontSize: '12px',
+              color: colors.text.secondary,
+              marginBottom: '6px',
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Total Revenue
+            </div>
+            <div style={{
+              fontSize: '28px',
+              fontWeight: '700',
+              color: colors.primary.main
+            }}>
               {stats.totalRevenue.toFixed(2)} EUR
             </div>
           </div>
-          <div style={{ padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
-            <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px' }}>Avg Order Value</div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#111827' }}>
+          <div style={{
+            padding: '18px',
+            backgroundColor: colors.background.secondary,
+            borderRadius: '12px',
+            border: `2px solid ${colors.border.light}`
+          }}>
+            <div style={{
+              fontSize: '12px',
+              color: colors.text.secondary,
+              marginBottom: '6px',
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Avg Order Value
+            </div>
+            <div style={{
+              fontSize: '28px',
+              fontWeight: '700',
+              color: colors.primary.main
+            }}>
               {stats.avgOrderValue.toFixed(2)} EUR
             </div>
           </div>
-          <div style={{ padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
-            <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px' }}>In Queue</div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#111827' }}>
+          <div style={{
+            padding: '18px',
+            backgroundColor: colors.background.secondary,
+            borderRadius: '12px',
+            border: `2px solid ${colors.border.light}`
+          }}>
+            <div style={{
+              fontSize: '12px',
+              color: colors.text.secondary,
+              marginBottom: '6px',
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              In Queue
+            </div>
+            <div style={{
+              fontSize: '28px',
+              fontWeight: '700',
+              color: colors.status.warning
+            }}>
               {stats.byStatus.Confirmed + stats.byStatus.Preparing}
             </div>
           </div>
@@ -314,15 +432,17 @@ export function KitchenDashboard() {
         <div
           style={{
             position: 'fixed',
-            top: '20px',
-            right: '20px',
-            backgroundColor: '#10B981',
-            color: 'white',
-            padding: '16px 24px',
-            borderRadius: '8px',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+            top: '24px',
+            right: '24px',
+            backgroundColor: colors.status.success,
+            color: colors.text.inverse,
+            padding: '18px 28px',
+            borderRadius: '12px',
+            boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
             zIndex: 1000,
-            animation: 'slideIn 0.3s ease-out'
+            fontWeight: '600',
+            fontSize: '15px',
+            border: `2px solid ${colors.orderStatus.ready.border}`
           }}
         >
           {notification}
@@ -333,11 +453,13 @@ export function KitchenDashboard() {
       {error && (
         <div
           style={{
-            backgroundColor: '#FEE2E2',
-            color: '#991B1B',
-            padding: '16px',
-            borderRadius: '8px',
-            marginBottom: '20px'
+            backgroundColor: '#ffebee',
+            color: colors.status.error,
+            padding: '18px 24px',
+            borderRadius: '12px',
+            marginBottom: '24px',
+            border: `2px solid ${colors.status.error}`,
+            fontWeight: '600'
           }}
         >
           {error}
@@ -348,19 +470,25 @@ export function KitchenDashboard() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          gap: '20px'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+          gap: '24px'
         }}
       >
         {/* Confirmed Column */}
-        <div>
+        <div style={{
+          backgroundColor: colors.background.paper,
+          borderRadius: '12px',
+          overflow: 'hidden',
+          border: `2px solid ${colors.secondary.main}`,
+          boxShadow: '0 4px 8px rgba(0,0,0,0.08)'
+        }}>
           <div
             style={{
-              backgroundColor: '#3B82F6',
-              color: 'white',
-              padding: '12px 16px',
-              borderRadius: '8px 8px 0 0',
-              fontWeight: '600',
+              backgroundColor: colors.secondary.main,
+              color: colors.text.inverse,
+              padding: '14px 20px',
+              fontWeight: '700',
+              fontSize: '16px',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
@@ -369,18 +497,30 @@ export function KitchenDashboard() {
             <span>Confirmed</span>
             <span
               style={{
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                padding: '4px 12px',
-                borderRadius: '12px',
-                fontSize: '14px'
+                backgroundColor: 'rgba(255,255,255,0.25)',
+                padding: '6px 14px',
+                borderRadius: '14px',
+                fontSize: '14px',
+                fontWeight: '700'
               }}
             >
               {groupedOrders.Confirmed.length}
             </span>
           </div>
-          <div style={{ backgroundColor: '#EFF6FF', padding: '16px', borderRadius: '0 0 8px 8px', minHeight: '400px' }}>
+          <div style={{
+            backgroundColor: colors.orderStatus.confirmed.bg,
+            padding: '18px',
+            minHeight: '500px'
+          }}>
             {groupedOrders.Confirmed.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#6B7280', padding: '20px' }}>No confirmed orders</p>
+              <p style={{
+                textAlign: 'center',
+                color: colors.text.secondary,
+                padding: '40px 20px',
+                fontWeight: '500'
+              }}>
+                No confirmed orders
+              </p>
             ) : (
               groupedOrders.Confirmed.map((order) => (
                 <OrderCard
@@ -395,14 +535,20 @@ export function KitchenDashboard() {
         </div>
 
         {/* Preparing Column */}
-        <div>
+        <div style={{
+          backgroundColor: colors.background.paper,
+          borderRadius: '12px',
+          overflow: 'hidden',
+          border: `2px solid ${colors.status.warning}`,
+          boxShadow: '0 4px 8px rgba(0,0,0,0.08)'
+        }}>
           <div
             style={{
-              backgroundColor: '#F59E0B',
-              color: 'white',
-              padding: '12px 16px',
-              borderRadius: '8px 8px 0 0',
-              fontWeight: '600',
+              backgroundColor: colors.status.warning,
+              color: colors.text.inverse,
+              padding: '14px 20px',
+              fontWeight: '700',
+              fontSize: '16px',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
@@ -411,18 +557,30 @@ export function KitchenDashboard() {
             <span>Preparing</span>
             <span
               style={{
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                padding: '4px 12px',
-                borderRadius: '12px',
-                fontSize: '14px'
+                backgroundColor: 'rgba(255,255,255,0.25)',
+                padding: '6px 14px',
+                borderRadius: '14px',
+                fontSize: '14px',
+                fontWeight: '700'
               }}
             >
               {groupedOrders.Preparing.length}
             </span>
           </div>
-          <div style={{ backgroundColor: '#FEF3C7', padding: '16px', borderRadius: '0 0 8px 8px', minHeight: '400px' }}>
+          <div style={{
+            backgroundColor: colors.orderStatus.preparing.bg,
+            padding: '18px',
+            minHeight: '500px'
+          }}>
             {groupedOrders.Preparing.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#6B7280', padding: '20px' }}>No orders in preparation</p>
+              <p style={{
+                textAlign: 'center',
+                color: colors.text.secondary,
+                padding: '40px 20px',
+                fontWeight: '500'
+              }}>
+                No orders in preparation
+              </p>
             ) : (
               groupedOrders.Preparing.map((order) => (
                 <OrderCard
@@ -437,14 +595,20 @@ export function KitchenDashboard() {
         </div>
 
         {/* Ready Column */}
-        <div>
+        <div style={{
+          backgroundColor: colors.background.paper,
+          borderRadius: '12px',
+          overflow: 'hidden',
+          border: `2px solid ${colors.status.success}`,
+          boxShadow: '0 4px 8px rgba(0,0,0,0.08)'
+        }}>
           <div
             style={{
-              backgroundColor: '#10B981',
-              color: 'white',
-              padding: '12px 16px',
-              borderRadius: '8px 8px 0 0',
-              fontWeight: '600',
+              backgroundColor: colors.status.success,
+              color: colors.text.inverse,
+              padding: '14px 20px',
+              fontWeight: '700',
+              fontSize: '16px',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
@@ -453,18 +617,30 @@ export function KitchenDashboard() {
             <span>Ready</span>
             <span
               style={{
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                padding: '4px 12px',
-                borderRadius: '12px',
-                fontSize: '14px'
+                backgroundColor: 'rgba(255,255,255,0.25)',
+                padding: '6px 14px',
+                borderRadius: '14px',
+                fontSize: '14px',
+                fontWeight: '700'
               }}
             >
               {groupedOrders.Ready.length}
             </span>
           </div>
-          <div style={{ backgroundColor: '#D1FAE5', padding: '16px', borderRadius: '0 0 8px 8px', minHeight: '400px' }}>
+          <div style={{
+            backgroundColor: colors.orderStatus.ready.bg,
+            padding: '18px',
+            minHeight: '500px'
+          }}>
             {groupedOrders.Ready.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#6B7280', padding: '20px' }}>No ready orders</p>
+              <p style={{
+                textAlign: 'center',
+                color: colors.text.secondary,
+                padding: '40px 20px',
+                fontWeight: '500'
+              }}>
+                No ready orders
+              </p>
             ) : (
               groupedOrders.Ready.map((order) => (
                 <OrderCard
@@ -479,14 +655,20 @@ export function KitchenDashboard() {
         </div>
 
         {/* Delivered Column */}
-        <div>
+        <div style={{
+          backgroundColor: colors.background.paper,
+          borderRadius: '12px',
+          overflow: 'hidden',
+          border: `2px solid ${colors.neutral.gray}`,
+          boxShadow: '0 4px 8px rgba(0,0,0,0.08)'
+        }}>
           <div
             style={{
-              backgroundColor: '#6B7280',
-              color: 'white',
-              padding: '12px 16px',
-              borderRadius: '8px 8px 0 0',
-              fontWeight: '600',
+              backgroundColor: colors.neutral.gray,
+              color: colors.text.inverse,
+              padding: '14px 20px',
+              fontWeight: '700',
+              fontSize: '16px',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
@@ -495,18 +677,30 @@ export function KitchenDashboard() {
             <span>Delivered</span>
             <span
               style={{
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                padding: '4px 12px',
-                borderRadius: '12px',
-                fontSize: '14px'
+                backgroundColor: 'rgba(255,255,255,0.25)',
+                padding: '6px 14px',
+                borderRadius: '14px',
+                fontSize: '14px',
+                fontWeight: '700'
               }}
             >
               {groupedOrders.Delivered.length}
             </span>
           </div>
-          <div style={{ backgroundColor: '#F3F4F6', padding: '16px', borderRadius: '0 0 8px 8px', minHeight: '400px' }}>
+          <div style={{
+            backgroundColor: colors.orderStatus.delivered.bg,
+            padding: '18px',
+            minHeight: '500px'
+          }}>
             {groupedOrders.Delivered.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#6B7280', padding: '20px' }}>No delivered orders</p>
+              <p style={{
+                textAlign: 'center',
+                color: colors.text.secondary,
+                padding: '40px 20px',
+                fontWeight: '500'
+              }}>
+                No delivered orders
+              </p>
             ) : (
               groupedOrders.Delivered.map((order) => (
                 <OrderCard

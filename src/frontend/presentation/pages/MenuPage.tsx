@@ -10,8 +10,10 @@ import { CartIcon } from '../../src/presentation/components/CartIcon'
 import { ShoppingCart } from '../../src/presentation/components/ShoppingCart'
 import { PaymentModal } from '../../src/presentation/components/PaymentModal'
 import { Toast, ToastType } from '../../src/presentation/components/Toast'
+import { AllergenLegend } from '../../src/presentation/components/AllergenIcons'
 import { useCartStore } from '../../src/store/cartStore'
 import { useOrderNotifications } from '../../src/hooks/useOrderNotifications'
+import { colors } from '../../src/theme/colors'
 
 interface SessionData {
   sessionId: string
@@ -227,13 +229,43 @@ function MenuPage() {
         />
       )}
 
-      <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-        <header style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{
+        padding: '20px',
+        maxWidth: '1200px',
+        margin: '0 auto',
+        backgroundColor: colors.background.main,
+        minHeight: '100vh'
+      }}>
+        <header style={{
+          marginBottom: '24px',
+          backgroundColor: colors.background.paper,
+          padding: '20px',
+          borderRadius: '12px',
+          border: `2px solid ${colors.border.light}`,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '16px'
+          }}>
             <div>
-              <h1>Table {tableNumber}</h1>
+              <h1 style={{
+                margin: '0 0 8px 0',
+                color: colors.primary.main,
+                fontSize: '32px',
+                fontWeight: '700'
+              }}>
+                Table {tableNumber}
+              </h1>
               {session && (
-                <p style={{ marginTop: '8px', opacity: 0.7, fontSize: '0.9em' }}>
+                <p style={{
+                  margin: 0,
+                  color: colors.text.secondary,
+                  fontSize: '0.9em'
+                }}>
                   Session: {new Date(session.startedAt).toLocaleTimeString()}
                 </p>
               )}
@@ -242,18 +274,22 @@ function MenuPage() {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              padding: '8px 12px',
-              borderRadius: '6px',
-              backgroundColor: isConnected ? '#e8f5e9' : '#ffebee',
-              fontSize: '0.85em'
+              padding: '10px 16px',
+              borderRadius: '8px',
+              backgroundColor: isConnected ? colors.orderStatus.ready.bg : '#ffebee',
+              border: `2px solid ${isConnected ? colors.orderStatus.ready.border : '#ef5350'}`,
+              fontSize: '0.9em'
             }}>
               <div style={{
-                width: '8px',
-                height: '8px',
+                width: '10px',
+                height: '10px',
                 borderRadius: '50%',
-                backgroundColor: isConnected ? '#4caf50' : '#f44336'
+                backgroundColor: isConnected ? colors.status.success : colors.status.error
               }} />
-              <span style={{ color: isConnected ? '#2e7d32' : '#c62828' }}>
+              <span style={{
+                color: isConnected ? colors.orderStatus.ready.text : colors.status.error,
+                fontWeight: '600'
+              }}>
                 {isConnected ? 'Live' : 'Disconnected'}
               </span>
             </div>
@@ -261,7 +297,14 @@ function MenuPage() {
         </header>
 
         <main>
-          <h2 style={{ marginBottom: '16px' }}>Menu</h2>
+          <h2 style={{
+            marginBottom: '20px',
+            color: colors.text.primary,
+            fontSize: '28px',
+            fontWeight: '600'
+          }}>
+            Menu
+          </h2>
 
           <CategoryTabs
             categories={categories}
@@ -270,17 +313,39 @@ function MenuPage() {
           />
 
           {loadingProducts ? (
-            <p>Loading products...</p>
+            <p style={{
+              textAlign: 'center',
+              color: colors.text.secondary,
+              fontSize: '18px',
+              padding: '40px 0'
+            }}>
+              Loading products...
+            </p>
           ) : products.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#999', padding: '40px 0' }}>
+            <p style={{
+              textAlign: 'center',
+              color: colors.text.secondary,
+              padding: '40px 0',
+              fontSize: '18px'
+            }}>
               No products available in this category
             </p>
           ) : (
-            <div>
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gap: '20px',
+                marginBottom: '32px'
+              }}>
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+
+              {/* Allergen Legend */}
+              <AllergenLegend />
+            </>
           )}
         </main>
       </div>

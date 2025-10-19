@@ -1,4 +1,5 @@
 import { useCartStore } from '../../store/cartStore'
+import { colors } from '../../theme/colors'
 
 interface ShoppingCartProps {
   isOpen: boolean
@@ -29,36 +30,67 @@ export function ShoppingCart({
   const currency = items[0]?.currency || 'EUR'
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      right: 0,
-      width: '400px',
-      height: '100vh',
-      backgroundColor: '#ffffff',
-      boxShadow: '-2px 0 10px rgba(0, 0, 0, 0.1)',
-      zIndex: 1000,
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
+    <>
+      {/* Backdrop for mobile */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 999,
+          display: isOpen ? 'block' : 'none'
+        }}
+        onClick={onClose}
+      />
+
+      {/* Cart Sidebar */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        right: 0,
+        width: '100%',
+        maxWidth: '450px',
+        height: '100vh',
+        backgroundColor: colors.background.paper,
+        boxShadow: '-4px 0 20px rgba(0, 0, 0, 0.15)',
+        zIndex: 1000,
+        display: 'flex',
+        flexDirection: 'column',
+        transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
+        transition: 'transform 0.3s ease-in-out'
+      }}>
       {/* Header */}
       <div style={{
         padding: '20px',
-        borderBottom: '1px solid #ecf0f1',
+        borderBottom: `2px solid ${colors.border.light}`,
+        backgroundColor: colors.primary.main,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        <h2 style={{ margin: 0, fontSize: '24px' }}>Your Order</h2>
+        <h2 style={{
+          margin: 0,
+          fontSize: '24px',
+          fontWeight: '600',
+          color: colors.text.inverse
+        }}>
+          Your Order
+        </h2>
         <button
           onClick={onClose}
           style={{
             background: 'none',
             border: 'none',
-            fontSize: '28px',
+            fontSize: '32px',
             cursor: 'pointer',
-            color: '#7f8c8d'
+            color: colors.text.inverse,
+            lineHeight: '1',
+            padding: '0 8px'
           }}
+          aria-label="Close cart"
         >
           ×
         </button>
@@ -68,15 +100,16 @@ export function ShoppingCart({
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '20px'
+        padding: '20px',
+        backgroundColor: colors.background.secondary
       }}>
         {items.length === 0 ? (
           <div style={{
             textAlign: 'center',
-            color: '#7f8c8d',
+            color: colors.text.secondary,
             marginTop: '50px'
           }}>
-            <p style={{ fontSize: '18px' }}>Your cart is empty</p>
+            <p style={{ fontSize: '18px', fontWeight: '500' }}>Your cart is empty</p>
             <p style={{ fontSize: '14px' }}>Add items from the menu to get started</p>
           </div>
         ) : (
@@ -84,25 +117,33 @@ export function ShoppingCart({
             <div
               key={item.productId}
               style={{
-                padding: '15px',
-                borderBottom: '1px solid #ecf0f1',
-                marginBottom: '10px'
+                padding: '16px',
+                borderBottom: `1px solid ${colors.border.light}`,
+                marginBottom: '12px',
+                backgroundColor: colors.background.paper,
+                borderRadius: '8px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
               }}
             >
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'flex-start',
-                marginBottom: '10px'
+                marginBottom: '12px'
               }}>
                 <div style={{ flex: 1 }}>
-                  <h4 style={{ margin: '0 0 5px 0', fontSize: '16px' }}>
+                  <h4 style={{
+                    margin: '0 0 6px 0',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: colors.text.primary
+                  }}>
                     {item.name}
                   </h4>
                   <p style={{
                     margin: 0,
                     fontSize: '14px',
-                    color: '#7f8c8d'
+                    color: colors.text.secondary
                   }}>
                     {item.price.toFixed(2)} {item.currency}
                   </p>
@@ -112,12 +153,14 @@ export function ShoppingCart({
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#e74c3c',
+                    color: colors.status.error,
                     cursor: 'pointer',
-                    fontSize: '20px',
-                    padding: '0 5px'
+                    fontSize: '24px',
+                    padding: '0 8px',
+                    lineHeight: '1'
                   }}
                   title="Remove item"
+                  aria-label="Remove item"
                 >
                   ×
                 </button>
@@ -129,41 +172,63 @@ export function ShoppingCart({
                 alignItems: 'center',
                 justifyContent: 'space-between'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <button
                     onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                     style={{
-                      width: '30px',
-                      height: '30px',
-                      border: '1px solid #bdc3c7',
-                      background: '#ffffff',
-                      borderRadius: '5px',
+                      width: '36px',
+                      height: '36px',
+                      border: `1px solid ${colors.border.main}`,
+                      background: colors.background.paper,
+                      borderRadius: '6px',
                       cursor: 'pointer',
-                      fontSize: '18px'
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      color: colors.text.primary,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
+                    aria-label="Decrease quantity"
                   >
                     -
                   </button>
-                  <span style={{ fontSize: '16px', minWidth: '30px', textAlign: 'center' }}>
+                  <span style={{
+                    fontSize: '16px',
+                    minWidth: '30px',
+                    textAlign: 'center',
+                    fontWeight: '600',
+                    color: colors.text.primary
+                  }}>
                     {item.quantity}
                   </span>
                   <button
                     onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                     disabled={item.quantity >= 100}
                     style={{
-                      width: '30px',
-                      height: '30px',
-                      border: '1px solid #bdc3c7',
-                      background: item.quantity >= 100 ? '#ecf0f1' : '#ffffff',
-                      borderRadius: '5px',
+                      width: '36px',
+                      height: '36px',
+                      border: `1px solid ${colors.border.main}`,
+                      background: item.quantity >= 100 ? colors.neutral.lightGray : colors.background.paper,
+                      borderRadius: '6px',
                       cursor: item.quantity >= 100 ? 'not-allowed' : 'pointer',
-                      fontSize: '18px'
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      color: item.quantity >= 100 ? colors.text.disabled : colors.text.primary,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
+                    aria-label="Increase quantity"
                   >
                     +
                   </button>
                 </div>
-                <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
+                <div style={{
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  color: colors.primary.main
+                }}>
                   {item.subtotal.toFixed(2)} {item.currency}
                 </div>
               </div>
@@ -176,18 +241,21 @@ export function ShoppingCart({
       {items.length > 0 && (
         <div style={{
           padding: '20px',
-          borderTop: '1px solid #ecf0f1',
-          backgroundColor: '#f8f9fa'
+          borderTop: `2px solid ${colors.border.main}`,
+          backgroundColor: colors.neutral.white
         }}>
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
-            marginBottom: '15px',
-            fontSize: '20px',
-            fontWeight: 'bold'
+            marginBottom: '16px',
+            fontSize: '22px',
+            fontWeight: 'bold',
+            color: colors.text.primary
           }}>
             <span>Total:</span>
-            <span>{total.toFixed(2)} {currency}</span>
+            <span style={{ color: colors.primary.main }}>
+              {total.toFixed(2)} {currency}
+            </span>
           </div>
 
           {!orderConfirmed ? (
@@ -197,16 +265,29 @@ export function ShoppingCart({
                 disabled={submitting}
                 style={{
                   width: '100%',
-                  padding: '15px',
-                  backgroundColor: submitting ? '#95a5a6' : '#27ae60',
-                  color: 'white',
+                  padding: '16px',
+                  backgroundColor: submitting ? colors.neutral.gray : colors.status.success,
+                  color: colors.text.inverse,
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '10px',
                   fontSize: '18px',
-                  fontWeight: 'bold',
+                  fontWeight: '600',
                   cursor: submitting ? 'not-allowed' : 'pointer',
-                  marginBottom: '10px',
-                  opacity: submitting ? 0.7 : 1
+                  marginBottom: '12px',
+                  opacity: submitting ? 0.7 : 1,
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (!submitting) {
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!submitting) {
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = 'none'
+                  }
                 }}
               >
                 {submitting ? 'Confirming...' : 'Confirm Order'}
@@ -218,11 +299,21 @@ export function ShoppingCart({
                   width: '100%',
                   padding: '12px',
                   backgroundColor: 'transparent',
-                  color: '#e74c3c',
-                  border: '1px solid #e74c3c',
+                  color: colors.status.error,
+                  border: `2px solid ${colors.status.error}`,
                   borderRadius: '8px',
                   fontSize: '14px',
-                  cursor: 'pointer'
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.status.error
+                  e.currentTarget.style.color = colors.text.inverse
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.color = colors.status.error
                 }}
               >
                 Clear Cart
@@ -231,13 +322,14 @@ export function ShoppingCart({
           ) : (
             <>
               <div style={{
-                padding: '12px',
-                backgroundColor: '#d4edda',
-                borderRadius: '6px',
-                marginBottom: '10px',
-                color: '#155724',
+                padding: '14px',
+                backgroundColor: colors.orderStatus.ready.bg,
+                border: `2px solid ${colors.orderStatus.ready.border}`,
+                borderRadius: '8px',
+                marginBottom: '12px',
+                color: colors.orderStatus.ready.text,
                 textAlign: 'center',
-                fontWeight: '500'
+                fontWeight: '600'
               }}>
                 ✓ Order confirmed! Ready to pay.
               </div>
@@ -247,15 +339,24 @@ export function ShoppingCart({
                   onClick={onPayment}
                   style={{
                     width: '100%',
-                    padding: '15px',
-                    backgroundColor: '#007bff',
-                    color: 'white',
+                    padding: '16px',
+                    backgroundColor: colors.secondary.main,
+                    color: colors.text.inverse,
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: '10px',
                     fontSize: '18px',
-                    fontWeight: 'bold',
+                    fontWeight: '600',
                     cursor: 'pointer',
-                    marginBottom: '10px'
+                    marginBottom: '12px',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.secondary.dark
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.secondary.main
+                    e.currentTarget.style.transform = 'translateY(0)'
                   }}
                 >
                   Proceed to Payment
@@ -268,11 +369,19 @@ export function ShoppingCart({
                   width: '100%',
                   padding: '12px',
                   backgroundColor: 'transparent',
-                  color: '#6c757d',
-                  border: '1px solid #6c757d',
+                  color: colors.text.secondary,
+                  border: `2px solid ${colors.border.main}`,
                   borderRadius: '8px',
                   fontSize: '14px',
-                  cursor: 'pointer'
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.neutral.lightGray
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
                 }}
               >
                 Close
@@ -282,5 +391,6 @@ export function ShoppingCart({
         </div>
       )}
     </div>
+    </>
   )
 }
