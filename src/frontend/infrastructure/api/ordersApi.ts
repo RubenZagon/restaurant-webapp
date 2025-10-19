@@ -29,7 +29,7 @@ export interface AddProductToOrderRequest {
 }
 
 export const getOrCreateOrderForTable = async (tableNumber: number): Promise<Order> => {
-  const response = await axios.get<Order>(`${API_BASE_URL}/orders/table/${tableNumber}`)
+  const response = await axios.get<Order>(`${API_BASE_URL}/api/orders/table/${tableNumber}`)
   return response.data
 }
 
@@ -38,14 +38,14 @@ export const addProductToOrder = async (
   request: AddProductToOrderRequest
 ): Promise<Order> => {
   const response = await axios.post<Order>(
-    `${API_BASE_URL}/orders/${orderId}/products`,
+    `${API_BASE_URL}/api/orders/${orderId}/products`,
     request
   )
   return response.data
 }
 
 export const confirmOrder = async (orderId: string): Promise<Order> => {
-  const response = await axios.post<Order>(`${API_BASE_URL}/orders/${orderId}/confirm`)
+  const response = await axios.post<Order>(`${API_BASE_URL}/api/orders/${orderId}/confirm`)
   return response.data
 }
 
@@ -58,13 +58,13 @@ export const updateOrderStatus = async (
   status: string
 ): Promise<Order> => {
   const response = await axios.put<Order>(
-    `${API_BASE_URL}/orders/${orderId}/status`,
+    `${API_BASE_URL}/api/orders/${orderId}/status`,
     { status }
   )
   return response.data
 }
 
 export const getAllActiveOrders = async (): Promise<Order[]> => {
-  const response = await axios.get<Order[]>(`${API_BASE_URL}/orders/active`)
+  const response = await axios.get<Order[]>(`${API_BASE_URL}/api/orders/active`)
   return response.data
 }

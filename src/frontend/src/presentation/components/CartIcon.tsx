@@ -5,8 +5,9 @@ interface CartIconProps {
 }
 
 export function CartIcon({ onClick }: CartIconProps) {
-  const getTotalItems = useCartStore(state => state.getTotalItems)
-  const itemCount = getTotalItems()
+  // Subscribe to items array directly so component re-renders when cart changes
+  const items = useCartStore(state => state.items)
+  const itemCount = items.reduce((total, item) => total + item.quantity, 0)
 
   return (
     <button

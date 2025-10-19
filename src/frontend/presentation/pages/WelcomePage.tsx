@@ -1,17 +1,15 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { TableIcon } from '../components/TableIcon'
 
 function WelcomePage() {
-  const [tableNumber, setTableNumber] = useState('')
   const navigate = useNavigate()
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (tableNumber && parseInt(tableNumber) > 0) {
-      navigate(`/table/${tableNumber}`)
-    }
+  const handleTableSelect = (tableNumber: number) => {
+    navigate(`/table/${tableNumber}`)
   }
+
+  // Array with 7 tables
+  const tables = [1, 2, 3, 4, 5, 6, 7]
 
   return (
     <div style={{
@@ -20,32 +18,33 @@ function WelcomePage() {
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: '100vh',
-      padding: '20px'
+      padding: '20px',
+      backgroundColor: '#f5f5f5'
     }}>
-      <h1>Welcome to Restaurant</h1>
-      <p style={{ marginTop: '20px', marginBottom: '40px' }}>
-        Scan your table QR code or enter the number manually
+      <h1 style={{ marginBottom: '10px', color: '#333' }}>Guachinche Canario</h1>
+      <p style={{ marginBottom: '40px', color: '#666', fontSize: '1.1em' }}>
+        Selecciona tu mesa
       </p>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <input
-          type="number"
-          placeholder="Table number"
-          value={tableNumber}
-          onChange={(e) => setTableNumber(e.target.value)}
-          min="1"
-          style={{
-            padding: '12px',
-            fontSize: '1.2em',
-            borderRadius: '8px',
-            border: '1px solid #ccc',
-            textAlign: 'center'
-          }}
-        />
-        <button type="submit" style={{ padding: '12px 24px', fontSize: '1.1em' }}>
-          Access Menu
-        </button>
-      </form>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gap: '30px',
+        maxWidth: '800px',
+        width: '100%',
+        padding: '20px',
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+      }}>
+        {tables.map((tableNumber) => (
+          <TableIcon
+            key={tableNumber}
+            tableNumber={tableNumber}
+            onClick={() => handleTableSelect(tableNumber)}
+          />
+        ))}
+      </div>
     </div>
   )
 }

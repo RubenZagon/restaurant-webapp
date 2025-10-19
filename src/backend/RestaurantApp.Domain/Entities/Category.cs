@@ -12,6 +12,13 @@ public class Category
     public string? Description { get; private set; }
     public bool IsActive { get; private set; }
 
+    // Parameterless constructor for EF Core
+    private Category()
+    {
+        Id = null!; // Will be set by EF Core
+        Name = null!;
+    }
+
     private Category(CategoryId id, string name, string? description)
     {
         Id = id;

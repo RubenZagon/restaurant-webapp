@@ -9,6 +9,12 @@ public class TableSession
     public DateTime? EndedAt { get; private set; }
     public bool IsActive => EndedAt == null;
 
+    // Parameterless constructor for EF Core
+    private TableSession()
+    {
+        Id = null!; // Will be set by EF Core
+    }
+
     private TableSession(SessionId id, DateTime startedAt)
     {
         Id = id;

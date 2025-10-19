@@ -9,6 +9,12 @@ public class Table
     public TableSession? ActiveSession { get; private set; }
     public bool IsOccupied => ActiveSession?.IsActive ?? false;
 
+    // Parameterless constructor for EF Core
+    private Table()
+    {
+        Id = null!; // Will be set by EF Core
+    }
+
     public Table(TableId id)
     {
         Id = id;
@@ -17,13 +23,12 @@ public class Table
 
     public void StartSession()
     {
-        if (IsOccupied)
+        // If there's no active session, create one
+        // If there's already an active session, keep using it (allows multiple people at same table)
+        if (!IsOccupied)
         {
-            throw new DomainException(
-                $"Table {Id.Value} already has an active session.");
+            ActiveSession = TableSession.Create();
         }
-
-        ActiveSession = TableSession.Create();
     }
 
     public void EndSession()

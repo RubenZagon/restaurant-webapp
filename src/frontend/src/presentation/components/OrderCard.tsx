@@ -1,4 +1,4 @@
-import { Order } from '../../infrastructure/api/ordersApi'
+import { Order } from '../../../infrastructure/api/ordersApi'
 
 interface OrderCardProps {
   order: Order

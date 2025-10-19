@@ -24,6 +24,8 @@ export function KitchenDashboard() {
   const [isConnected, setIsConnected] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notification, setNotification] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortBy, setSortBy] = useState<'time' | 'table' | 'total'>('time')
   const connectionRef = useRef<signalR.HubConnection | null>(null)
 
   // Fetch all active orders
@@ -127,12 +129,50 @@ export function KitchenDashboard() {
     }
   }, [])
 
+  // Filter orders by search term
+  const filteredOrders = orders.filter((order) => {
+    if (!searchTerm) return true
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      order.tableNumber.toString().includes(searchLower) ||
+      order.id.toLowerCase().includes(searchLower) ||
+      order.lines.some((line) => line.productName.toLowerCase().includes(searchLower))
+    )
+  })
+
+  // Sort orders
+  const sortedOrders = [...filteredOrders].sort((a, b) => {
+    switch (sortBy) {
+      case 'time':
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      case 'table':
+        return a.tableNumber - b.tableNumber
+      case 'total':
+        return b.total - a.total // Descending
+      default:
+        return 0
+    }
+  })
+
+  // Calculate statistics
+  const stats = {
+    totalOrders: orders.length,
+    totalRevenue: orders.reduce((sum, order) => sum + order.total, 0),
+    avgOrderValue: orders.length > 0 ? orders.reduce((sum, order) => sum + order.total, 0) / orders.length : 0,
+    byStatus: {
+      Confirmed: orders.filter((o) => o.status === 'Confirmed').length,
+      Preparing: orders.filter((o) => o.status === 'Preparing').length,
+      Ready: orders.filter((o) => o.status === 'Ready').length,
+      Delivered: orders.filter((o) => o.status === 'Delivered').length
+    }
+  }
+
   // Group orders by status for Kanban layout
   const groupedOrders = {
-    Confirmed: orders.filter((o) => o.status === 'Confirmed'),
-    Preparing: orders.filter((o) => o.status === 'Preparing'),
-    Ready: orders.filter((o) => o.status === 'Ready'),
-    Delivered: orders.filter((o) => o.status === 'Delivered')
+    Confirmed: sortedOrders.filter((o) => o.status === 'Confirmed'),
+    Preparing: sortedOrders.filter((o) => o.status === 'Preparing'),
+    Ready: sortedOrders.filter((o) => o.status === 'Ready'),
+    Delivered: sortedOrders.filter((o) => o.status === 'Delivered')
   }
 
   if (loading) {
@@ -163,34 +203,107 @@ export function KitchenDashboard() {
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ margin: 0, fontSize: '28px', fontWeight: '700' }}>Kitchen Dashboard</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {/* Connection Status */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h1 style={{ margin: 0, fontSize: '28px', fontWeight: '700' }}>Kitchen Dashboard</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              {/* Connection Status */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div
+                  style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    backgroundColor: isConnected ? '#10B981' : '#EF4444'
+                  }}
+                />
+                <span style={{ fontSize: '14px', color: '#6B7280' }}>
+                  {isConnected ? 'Live' : 'Disconnected'}
+                </span>
+              </div>
+              {/* Active Orders Count */}
               <div
                 style={{
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: '50%',
-                  backgroundColor: isConnected ? '#10B981' : '#EF4444'
+                  backgroundColor: '#3B82F6',
+                  color: 'white',
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  fontWeight: '600'
                 }}
-              />
-              <span style={{ fontSize: '14px', color: '#6B7280' }}>
-                {isConnected ? 'Live' : 'Disconnected'}
-              </span>
+              >
+                {orders.length} Active Orders
+              </div>
             </div>
-            {/* Active Orders Count */}
-            <div
+          </div>
+
+          {/* Search and Sort Controls */}
+          <div style={{ display: 'flex', gap: '12px', marginTop: '16px', alignItems: 'center' }}>
+            {/* Search Input */}
+            <input
+              type="text"
+              placeholder="Search by table, order ID, or product..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               style={{
-                backgroundColor: '#3B82F6',
-                color: 'white',
-                padding: '8px 16px',
-                borderRadius: '20px',
-                fontWeight: '600'
+                flex: 1,
+                padding: '10px 16px',
+                border: '1px solid #D1D5DB',
+                borderRadius: '8px',
+                fontSize: '14px',
+                outline: 'none'
+              }}
+            />
+
+            {/* Sort Dropdown */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'time' | 'table' | 'total')}
+              style={{
+                padding: '10px 16px',
+                border: '1px solid #D1D5DB',
+                borderRadius: '8px',
+                fontSize: '14px',
+                backgroundColor: 'white',
+                cursor: 'pointer',
+                outline: 'none'
               }}
             >
-              {orders.length} Active Orders
+              <option value="time">Sort by Time</option>
+              <option value="table">Sort by Table</option>
+              <option value="total">Sort by Total</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Statistics Panel */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '16px',
+            marginTop: '16px'
+          }}
+        >
+          <div style={{ padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
+            <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px' }}>Total Orders</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#111827' }}>{stats.totalOrders}</div>
+          </div>
+          <div style={{ padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
+            <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px' }}>Total Revenue</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#111827' }}>
+              {stats.totalRevenue.toFixed(2)} EUR
+            </div>
+          </div>
+          <div style={{ padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
+            <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px' }}>Avg Order Value</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#111827' }}>
+              {stats.avgOrderValue.toFixed(2)} EUR
+            </div>
+          </div>
+          <div style={{ padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
+            <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px' }}>In Queue</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#111827' }}>
+              {stats.byStatus.Confirmed + stats.byStatus.Preparing}
             </div>
           </div>
         </div>

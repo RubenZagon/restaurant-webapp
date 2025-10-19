@@ -18,6 +18,15 @@ public class Order : Entity
     public DateTime CreatedAt { get; private set; }
     public DateTime? ConfirmedAt { get; private set; }
 
+    // Parameterless constructor for EF Core
+    private Order()
+    {
+        Id = null!; // Will be set by EF Core
+        TableId = null!;
+        SessionId = null!;
+        Total = null!;
+    }
+
     private Order(OrderId id, TableId tableId, SessionId sessionId)
     {
         Id = id;

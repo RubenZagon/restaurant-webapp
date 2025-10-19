@@ -40,7 +40,7 @@ public class StartTableSessionUseCaseTests
     }
 
     [Fact]
-    public async Task Execute_WhenTableNotFound_ShouldReturnFailure()
+    public async Task Execute_WhenTableNotFound_ShouldCreateTableAndStartSession()
     {
         // Arrange
         var tableId = new TableId(999);
@@ -50,25 +50,33 @@ public class StartTableSessionUseCaseTests
         var result = await _useCase.Execute(tableId.Value);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Contain("does not exist");
-        _tableRepositoryMock.Verify(r => r.Save(It.IsAny<Table>()), Times.Never);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.SessionId.Should().NotBeEmpty();
+        result.Value.TableNumber.Should().Be(999);
+        // Should save twice: once to create the table, once to start the session
+        _tableRepositoryMock.Verify(r => r.Save(It.IsAny<Table>()), Times.Exactly(2));
     }
 
     [Fact]
-    public async Task Execute_WhenTableAlreadyOccupied_ShouldReturnFailure()
+    public async Task Execute_WhenTableAlreadyOccupied_ShouldReturnExistingSession()
     {
         // Arrange
         var tableId = new TableId(5);
         var table = new Table(tableId);
         table.StartSession(); // Table already occupied
+        var existingSessionId = table.ActiveSession!.Id.Value;
         _tableRepositoryMock.Setup(r => r.GetById(tableId)).ReturnsAsync(table);
 
         // Act
         var result = await _useCase.Execute(tableId.Value);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Contain("active session");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.SessionId.Should().Be(existingSessionId); // Should return the same session
+        result.Value.TableNumber.Should().Be(5);
+        // Should not save again since session already exists
+        _tableRepositoryMock.Verify(r => r.Save(It.IsAny<Table>()), Times.Never);
     }
 }

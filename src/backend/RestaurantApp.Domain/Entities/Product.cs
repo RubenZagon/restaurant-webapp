@@ -15,6 +15,16 @@ public class Product
     public Allergens Allergens { get; private set; }
     public bool IsAvailable { get; private set; }
 
+    // Parameterless constructor for EF Core
+    private Product()
+    {
+        Id = null!; // Will be set by EF Core
+        Name = null!;
+        Price = null!;
+        CategoryId = null!;
+        Allergens = null!;
+    }
+
     private Product(
         ProductId id,
         string name,

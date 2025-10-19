@@ -8,12 +8,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="RestaurantApp.Tests.Integration" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\RestaurantApp.Infrastructure\RestaurantApp.Infrastructure.csproj" />
     <ProjectReference Include="..\RestaurantApp.Application\RestaurantApp.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.2" />

@@ -11,6 +11,17 @@ public class OrderLine
     public Quantity Quantity { get; private set; }
     public Price Subtotal { get; private set; }
 
+    // Parameterless constructor for EF Core
+    private OrderLine()
+    {
+        Id = null!; // Will be set by EF Core
+        ProductId = null!;
+        ProductName = null!;
+        UnitPrice = null!;
+        Quantity = null!;
+        Subtotal = null!;
+    }
+
     private OrderLine(
         OrderLineId id,
         ProductId productId,

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using RestaurantApp.Application.Ports;
 using RestaurantApp.Application.Services;
 using RestaurantApp.Application.UseCases;
@@ -22,8 +23,15 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Configure PostgreSQL DbContext
+var connectionString = builder.Configuration.GetConnectionString("PostgreSQL")
+    ?? "Host=localhost;Port=5432;Database=restaurant_db;Username=restaurant_user;Password=restaurant_pass_dev";
+
+builder.Services.AddDbContext<RestaurantDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
 // Register application services (Dependency Injection)
-builder.Services.AddSingleton<ITableRepository, InMemoryTableRepository>();
+builder.Services.AddScoped<ITableRepository, PostgresTableRepository>();
 builder.Services.AddSingleton<ICategoryRepository, InMemoryCategoryRepository>();
 builder.Services.AddSingleton<IProductRepository, InMemoryProductRepository>();
 builder.Services.AddSingleton<IOrderRepository, InMemoryOrderRepository>();
@@ -65,6 +73,27 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Apply migrations and seed data automatically on startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<RestaurantDbContext>();
+    try
+    {
+        Log.Information("Applying database migrations...");
+        dbContext.Database.Migrate();
+        Log.Information("Database migrations applied successfully");
+
+        // Seed initial data
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<DatabaseSeeder>>();
+        var seeder = new DatabaseSeeder(dbContext, logger);
+        await seeder.SeedAsync();
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Error applying database migrations or seeding data");
+    }
+}
+
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -94,3 +123,6 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+// Make the implicit Program class public for integration tests
+public partial class Program { }
