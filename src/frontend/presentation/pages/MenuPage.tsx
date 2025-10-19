@@ -11,9 +11,9 @@ import { ShoppingCart } from '../../src/presentation/components/ShoppingCart'
 import { PaymentModal } from '../../src/presentation/components/PaymentModal'
 import { Toast, ToastType } from '../../src/presentation/components/Toast'
 import { AllergenLegend } from '../../src/presentation/components/AllergenIcons'
-import { useCartStore } from '../../src/store/cartStore'
-import { useOrderNotifications } from '../../src/hooks/useOrderNotifications'
-import { colors } from '../../src/theme/colors'
+import { useCartStore } from '@/src/store/cartStore.ts'
+import { useOrderNotifications } from '@/src/hooks/useOrderNotifications.ts'
+import { colors } from '@/src/theme/colors.ts'
 
 interface SessionData {
   sessionId: string

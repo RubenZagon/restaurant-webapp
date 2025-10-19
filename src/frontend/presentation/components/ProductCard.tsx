@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Product } from '@infrastructure/api/productsApi'
-import { useCartStore } from '../../src/store/cartStore'
+import { useCartStore } from '@/src/store/cartStore.ts'
 import { addProductToOrder } from '@infrastructure/api/ordersApi'
 import { AllergenList } from '../../src/presentation/components/AllergenIcons'
-import { colors } from '../../src/theme/colors'
+import { colors } from '@/src/theme/colors.ts'
 
 interface ProductCardProps {
   product: Product

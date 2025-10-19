@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import * as signalR from '@microsoft/signalr'
-import { Order, getAllActiveOrders, updateOrderStatus } from '../../infrastructure/api/ordersApi'
+import { Order, getAllActiveOrders, updateOrderStatus } from '@infrastructure/api/ordersApi.ts'
 import { OrderCard } from '../../src/presentation/components/OrderCard'
-import { colors } from '../../src/theme/colors'
+import { colors } from '@/src/theme/colors.ts'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 

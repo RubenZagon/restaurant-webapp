@@ -35,7 +35,9 @@ public class ProcessPaymentUseCase
             return Result<PaymentDto>.Failure("Order not found");
         }
 
-        if (order.Status != OrderStatus.Confirmed)
+        // Allow payment for orders that have been confirmed and are in any stage after that
+        // (Confirmed, Preparing, Ready, Delivered)
+        if (order.Status == OrderStatus.Draft || order.Status == OrderStatus.Cancelled)
         {
             return Result<PaymentDto>.Failure($"Order must be confirmed before payment. Current status: {order.Status}");
         }

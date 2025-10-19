@@ -132,7 +132,7 @@ export function PaymentModal({
                 <span style={{ fontSize: '24px', marginRight: '12px' }}>
                   {method.icon}
                 </span>
-                <span style={{ fontSize: '16px', fontWeight: '500' }}>
+                <span style={{ fontSize: '16px', fontWeight: '500', color: '#333' }}>
                   {method.name}
                 </span>
               </label>
