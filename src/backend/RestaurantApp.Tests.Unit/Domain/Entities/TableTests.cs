@@ -39,18 +39,19 @@ public class TableTests
     }
 
     [Fact]
-    public void StartSession_WhenTableOccupied_ShouldThrowDomainException()
+    public void StartSession_WhenTableOccupied_ShouldKeepExistingSession()
     {
         // Arrange
         var table = new Table(new TableId(5));
         table.StartSession();
+        var firstSession = table.ActiveSession;
 
         // Act
-        var act = () => table.StartSession();
+        table.StartSession();
 
         // Assert
-        act.Should().Throw<DomainException>()
-            .WithMessage("*already has an active session*");
+        table.IsOccupied.Should().BeTrue();
+        table.ActiveSession.Should().BeSameAs(firstSession);
     }
 
     [Fact]

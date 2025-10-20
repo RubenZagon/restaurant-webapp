@@ -40,7 +40,7 @@ public class StartTableSessionUseCaseTests
     }
 
     [Fact]
-    public async Task Execute_WhenTableNotFound_ShouldCreateTableAndStartSession()
+    public async Task Execute_WhenTableNotFound_ShouldReturnFailure()
     {
         // Arrange
         var tableId = new TableId(999);
@@ -50,12 +50,10 @@ public class StartTableSessionUseCaseTests
         var result = await _useCase.Execute(tableId.Value);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().NotBeNull();
-        result.Value!.SessionId.Should().NotBeEmpty();
-        result.Value.TableNumber.Should().Be(999);
-        // Should save twice: once to create the table, once to start the session
-        _tableRepositoryMock.Verify(r => r.Save(It.IsAny<Table>()), Times.Exactly(2));
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Contain("does not exist");
+        // Should not attempt to save anything
+        _tableRepositoryMock.Verify(r => r.Save(It.IsAny<Table>()), Times.Never);
     }
 
     [Fact]

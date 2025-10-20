@@ -288,8 +288,9 @@ public class GetAllActiveOrdersUseCaseTests
     private Order CreateOrderWithTime(OrderStatus status, DateTime createdAt)
     {
         var order = CreateOrder(status);
-        // Note: In a real scenario, we would need to set CreatedAt through reflection
-        // or add a test-specific constructor. For now, we rely on the order of creation
+        // Use reflection to set the CreatedAt property for testing purposes
+        var createdAtProperty = typeof(Order).GetProperty("CreatedAt");
+        createdAtProperty!.SetValue(order, createdAt);
         return order;
     }
 }

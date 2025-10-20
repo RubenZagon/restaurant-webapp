@@ -71,6 +71,11 @@ public class OrderTests
     {
         // Arrange
         var order = CreateTestOrder();
+        // Add a product first so we can confirm the order
+        var initialProductId = ProductId.Create();
+        var initialPrice = new Price(5m, "EUR");
+        var initialQuantity = new Quantity(1);
+        order.AddProduct(initialProductId, "Initial Product", initialPrice, initialQuantity);
         order.Confirm();
 
         var productId = ProductId.Create();

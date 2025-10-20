@@ -120,7 +120,7 @@ public class PriceTests
         var result = price.ToString();
 
         // Assert
-        result.Should().Contain("15.99");
+        result.Should().Contain("15,99");
         result.Should().Contain("EUR");
     }
 

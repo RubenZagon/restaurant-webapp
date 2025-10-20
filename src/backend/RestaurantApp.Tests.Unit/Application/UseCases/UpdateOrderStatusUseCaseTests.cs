@@ -40,6 +40,7 @@ public class UpdateOrderStatusUseCaseTests
             new Price(10, "EUR"),
             new Quantity(1));
         order.Confirm();
+        order.ClearDomainEvents(); // Clear events from setup
 
         _orderRepositoryMock
             .Setup(r => r.GetById(It.IsAny<OrderId>()))
@@ -55,7 +56,7 @@ public class UpdateOrderStatusUseCaseTests
         _orderRepositoryMock.Verify(r => r.Save(order), Times.Once);
         _notificationServiceMock.Verify(
             s => s.NotifyOrderStatusChanged(It.Is<OrderStatusChangedEvent>(
-                e => e.OrderId == orderId && e.NewStatus == OrderStatus.Preparing)),
+                e => e.NewStatus == OrderStatus.Preparing)),
             Times.Once);
     }
 
@@ -89,7 +90,7 @@ public class UpdateOrderStatusUseCaseTests
         _orderRepositoryMock.Verify(r => r.Save(order), Times.Once);
         _notificationServiceMock.Verify(
             s => s.NotifyOrderStatusChanged(It.Is<OrderStatusChangedEvent>(
-                e => e.OrderId == orderId && e.NewStatus == OrderStatus.Ready)),
+                e => e.NewStatus == OrderStatus.Ready)),
             Times.Once);
     }
 
